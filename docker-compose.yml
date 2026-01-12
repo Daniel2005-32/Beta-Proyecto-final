@@ -1,0 +1,41 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: proyecto_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: DanielSM
+      MYSQL_DATABASE: proyecto_final
+      MYSQL_USER: Daniel
+      MYSQL_PASSWORD: DanielSM
+    ports:
+      - "3307:3306"  # ✅ Libre
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: proyecto_phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    environment:
+      PMA_HOST: mysql
+      UPLOAD_LIMIT: 100M
+    ports:
+      - "8080:80"  # ✅ Libre
+
+  frontend:
+    build: .
+    container_name: proyecto_frontend
+    restart: unless-stopped
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"  # ✅ Libre (Vue en puerto 3000)
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0"
+
+volumes:
+  mysql_data:
