@@ -1,0 +1,29 @@
+“Actúa como un arquitecto de software y 
+diseñador de experiencias digitales experto 
+en comercio electrónico, gamificación y plataformas interactivas, 
+y diseña el concepto completo de una aplicación web centrada en videojuegos
+y anime que funcione como una tienda online avanzada y altamente inmersiva, 
+con una identidad visual moderna inspirada en la estética gamer, anime y cyberpunk; 
+la plataforma debe permitir la venta de productos físicos
+y digitales como figuras de colección, ropa, accesorios, ediciones especiales y merchandising exclusivo, 
+gestionados mediante una base de datos propia que controle el inventario en tiempo real, 
+donde cada producto tenga un stock limitado claramente visible para el usuario, 
+reforzando la sensación de escasez y coleccionismo; incluye un sistema de usuarios registrados con perfiles personalizados, 
+historial de compras, niveles, logros y notificaciones, 
+donde ciertos productos exclusivos solo se desbloqueen bajo condiciones específicas como el nivel del usuario, 
+su participación en eventos o su fidelidad a la plataforma; 
+incorpora una sección de productos exclusivos y de edición limitada 
+que aparezcan mediante lanzamientos temporales o drops sorpresa para generar expectación y urgencia, y 
+establece que cuando cualquier producto alcance su última unidad disponible, 
+el sistema active automáticamente un modo de subasta que sustituya la compra directa, 
+iniciando un contador regresivo de 24 horas visible en tiempo real durante el cual los usuarios 
+puedan realizar pujas competitivas con incrementos mínimos configurables, 
+mostrando siempre la puja más alta y notificando instantáneamente a los participantes cuando su oferta sea superada; 
+al finalizar el tiempo, la plataforma debe cerrar automáticamente la subasta, declarar ganador al usuario con la puja más alta, 
+bloquear nuevas ofertas y generar el proceso de compra de forma segura y transparente, 
+registrando todo el historial de pujas y transacciones en la base de datos para garantizar trazabilidad y prevención de fraudes; 
+además, integra mecánicas de gamificación como rankings, recompensas y eventos temáticos, 
+con el objetivo de transformar la tienda en un punto de encuentro para la comunidad gamer y otaku, 
+donde la experiencia de compra sea competitiva, exclusiva y memorable, 
+y entrega como resultado una propuesta bien estructurada que incluya funcionalidades clave, 
+arquitectura general del sistema, flujo de usuario, consideraciones de seguridad y posibles mejoras futuras.”
