@@ -1,0 +1,69 @@
+Quiero que mejores únicamente el diseño visual (HTML + CSS) de mi página web hecha en Django, sin modificar la lógica, las rutas, las views ni la estructura funcional.
+
+Es muy importante que:
+
+Se mantenga el logo en la esquina superior izquierda.
+
+Se mantengan los apartados de navegación en la esquina superior derecha (Videojuegos, Manga, Figuras, Productos de Anime, Cosplay, etc.).
+
+Se mantengan los botones actuales como “Explorar catálogo”, “Ver subastas” y los botones de añadir al carrito.
+
+No elimines ningún bloque funcional ni enlaces.
+
+No modifiques los nombres de clases si ya existen, solo mejora el diseño.
+
+No cambies la estructura de los templates Django ni las etiquetas {% %} o {{ }}.
+
+El problema actual es que la página se ve muy plana, con demasiado espacio en blanco, sin jerarquía visual y sin identidad gamer.
+
+Quiero que hagas lo siguiente:
+
+Aplicar un fondo oscuro moderno (por ejemplo #0f0f1a o similar).
+
+Usar una paleta gamer con detalles en azul eléctrico, morado o rojo neón.
+
+Encerrar todo el contenido en un contenedor centrado con max-width (por ejemplo 1200px).
+
+Rediseñar la cabecera:
+
+Fondo ligeramente diferente al body.
+
+Barra horizontal con logo a la izquierda.
+
+Menú alineado a la derecha.
+
+Efecto hover en los enlaces del menú.
+
+Espaciado uniforme y elegante.
+
+Rediseñar las tarjetas de productos:
+
+Fondo oscuro ligeramente más claro que el body.
+
+Bordes redondeados (10px–15px).
+
+Sombra suave.
+
+Transición al hacer hover (ligero efecto elevación).
+
+Mejor distribución entre imagen, título, descripción y botón.
+
+Rediseñar los botones:
+
+Bordes redondeados.
+
+Color llamativo acorde a la paleta.
+
+Efecto hover con transición suave.
+
+Reducir el exceso de espacio vacío.
+
+Mejorar tipografía (usar una fuente moderna tipo Poppins, Orbitron o similar).
+
+Hacer que el diseño sea responsive usando flexbox o grid.
+
+Mantener todo profesional, limpio y moderno.
+
+Devuélveme el CSS completo optimizado y, si es necesario, los pequeños ajustes en el HTML (sin romper Django).
+
+No quiero una explicación, quiero el código mejorado listo para usar.

@@ -11,7 +11,7 @@ services:
     ports:
       - "3307:3306"  # ✅ Libre
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mysql_data_fresh:/var/lib/mysql
       - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
 
   phpmyadmin:
@@ -39,3 +39,4 @@ services:
 
 volumes:
   mysql_data:
+  mysql_data_fresh:
