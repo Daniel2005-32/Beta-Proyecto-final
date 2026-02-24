@@ -10,22 +10,50 @@ class Product extends Model
     use HasFactory;
 
     protected $fillable = [
-        'category_id', 'name', 'slug', 'description', 'price', 
-        'stock', 'image', 'is_featured', 'is_exclusive', 'is_trend'
+        'name', 'slug', 'description', 'price', 'original_price',
+        'image', 'category', 'category_slug', 'stock', 
+        'featured', 'trending', 'specs'
     ];
 
-    public function category()
+    protected $casts = [
+        'price' => 'decimal:2',
+        'original_price' => 'decimal:2',
+        'featured' => 'boolean',
+        'trending' => 'boolean',
+        'specs' => 'array'
+    ];
+
+    // Scope para productos destacados
+    public function scopeFeatured($query)
     {
-        return $this->belongsTo(Category::class);
+        return $query->where('featured', true);
     }
 
-    public function auction()
+    // Scope para productos en tendencia
+    public function scopeTrending($query)
     {
-        return $this->hasOne(Auction::class);
+        return $query->where('trending', true);
     }
 
-    public function orderItems()
+    // Scope por categoría
+    public function scopeByCategory($query, $categorySlug)
     {
-        return $this->hasMany(OrderItem::class);
+        return $query->where('category_slug', $categorySlug);
+    }
+
+    // Verificar si hay stock
+    public function inStock()
+    {
+        return $this->stock > 0;
+    }
+
+    // Reducir stock
+    public function decreaseStock($quantity = 1)
+    {
+        if ($this->stock >= $quantity) {
+            $this->decrement('stock', $quantity);
+            return true;
+        }
+        return false;
     }
 }
