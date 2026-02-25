@@ -7,6 +7,7 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Gate;
 
 class OrderController extends Controller
 {
@@ -124,7 +125,10 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $this->authorize('view', $order); // Solo el dueño puede ver
+        // Opción 1: Verificar manualmente que el usuario es el dueño
+        if (auth()->id() !== $order->user_id) {
+            abort(403, 'No tienes permiso para ver este pedido');
+        }
         
         return view('orders.show', compact('order'));
     }
@@ -134,6 +138,4 @@ class OrderController extends Controller
         Session::forget('cart');
         return redirect()->route('cart.index')->with('success', 'Carrito vaciado correctamente');
     }
-
-}   
-
+}

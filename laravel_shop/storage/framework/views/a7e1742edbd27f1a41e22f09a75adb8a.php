@@ -60,13 +60,21 @@
                                 <button @click="open = !open" class="flex items-center text-sm font-bold text-gray-300 hover:text-white transition">
                                     <?php echo e(Auth::user()->name); ?>
 
-                                    <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                    <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                    </svg>
                                 </button>
                                 <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-gamer-card border border-gray-700 rounded-md shadow-xl py-1 z-50">
-                                    <a href="<?php echo e(route('dashboard')); ?>" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-blue">Panel</a>
+                                    <!-- SOLO PARA ADMIN -->
+                                    <a href="<?php echo e(route('admin.products.index')); ?>" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-blue">
+                                        👑 Panel Admin
+                                    </a>
+                                    <div class="border-t border-gray-800 my-1"></div>
                                     <form method="POST" action="<?php echo e(route('logout')); ?>">
                                         <?php echo csrf_field(); ?>
-                                        <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-red">Cerrar</button>
+                                        <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-red">
+                                            Cerrar sesión
+                                        </button>
                                     </form>
                                 </div>
                             </div>
@@ -79,9 +87,9 @@
             </div>
         </header>
 
-        <!-- CONTENEDOR PRINCIPAL CON FONDO DE IMÁGENES LATERALES -->
+        <!-- CONTENEDOR PRINCIPAL CON IMÁGENES LATERALES -->
         <div class="relative flex-grow">
-            <!-- FONDO IZQUIERDO - Imagen anime que ocupa toda la mitad -->
+            <!-- FONDO IZQUIERDO - Imagen anime -->
             <div class="fixed left-0 top-0 h-full w-1/2 pointer-events-none overflow-hidden">
                 <img src="https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=1887&auto=format&fit=crop" 
                      alt="Anime Collection" 
@@ -89,7 +97,7 @@
                 <div class="absolute inset-0 bg-gradient-to-r from-transparent to-gamer-dark"></div>
             </div>
 
-            <!-- FONDO DERECHO - Imagen gaming que ocupa toda la mitad -->
+            <!-- FONDO DERECHO - Imagen gaming -->
             <div class="fixed right-0 top-0 h-full w-1/2 pointer-events-none overflow-hidden">
                 <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop" 
                      alt="Gaming Setup" 

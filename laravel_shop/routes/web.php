@@ -16,6 +16,11 @@ Route::prefix('products')->name('products.')->group(function () {
     Route::get('/{slug}', [ProductController::class, 'show'])->name('show');
 });
 
+// Admin routes (sin middleware, la verificación está en el controlador)
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::resource('products', App\Http\Controllers\Admin\ProductController::class);
+});
+
 // Offers
 Route::get('/ofertas', function () {
     $offers = App\Models\Product::where('original_price', '>', 0)
@@ -42,17 +47,24 @@ Route::post('/cart/checkout', [OrderController::class, 'checkout'])->name('cart.
 // Orders
 Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show')->middleware('auth');
 
-// Auctions - PROTEGIDAS CON AUTH
-Route::middleware(['auth'])->prefix('auctions')->name('auctions.')->group(function () {
-    Route::get('/', [AuctionController::class, 'index'])->name('index');
-    Route::get('/{id}', [AuctionController::class, 'show'])->name('show');
-    Route::post('/{id}/bid', [AuctionController::class, 'placeBid'])->name('bid');
-});
+// Auctions
+Route::get('/auctions', [AuctionController::class, 'index'])->name('auctions.index');
+Route::get('/auctions/{id}', [AuctionController::class, 'show'])->name('auctions.show');
+Route::post('/auctions/{id}/bid', [AuctionController::class, 'placeBid'])->name('auctions.bid')->middleware('auth');
 
 // Dashboard
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// Auth routes
+// Profile routes
+Route::middleware('auth')->prefix('profile')->name('profile.')->group(function () {
+    Route::get('/', function () { return view('profile.edit'); })->name('edit');
+    Route::patch('/', function () { return back()->with('success', 'Perfil actualizado'); })->name('update');
+    Route::delete('/', function () { 
+        auth()->user()->delete(); 
+        return redirect('/'); 
+    })->name('destroy');
+});
+
 require __DIR__.'/auth.php';
