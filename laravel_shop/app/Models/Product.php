@@ -11,8 +11,7 @@ class Product extends Model
 
     protected $fillable = [
         'name', 'slug', 'description', 'price', 'original_price',
-        'image', 'category', 'category_slug', 'stock', 
-        'featured', 'trending', 'specs'
+        'image', 'category_id', 'stock', 'featured', 'trending', 'specs'
     ];
 
     protected $casts = [
@@ -23,31 +22,48 @@ class Product extends Model
         'specs' => 'array'
     ];
 
-    // Scope para productos destacados
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function auctions()
+    {
+        return $this->hasMany(Auction::class);
+    }
+
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
+
+    // Scopes
     public function scopeFeatured($query)
     {
         return $query->where('featured', true);
     }
 
-    // Scope para productos en tendencia
     public function scopeTrending($query)
     {
         return $query->where('trending', true);
     }
 
-    // Scope por categoría
-    public function scopeByCategory($query, $categorySlug)
+    public function scopeInStock($query)
     {
-        return $query->where('category_slug', $categorySlug);
+        return $query->where('stock', '>', 0);
     }
 
-    // Verificar si hay stock
+    public function scopeByCategory($query, $categoryId)
+    {
+        return $query->where('category_id', $categoryId);
+    }
+
+    // Métodos
     public function inStock()
     {
         return $this->stock > 0;
     }
 
-    // Reducir stock
     public function decreaseStock($quantity = 1)
     {
         if ($this->stock >= $quantity) {
@@ -55,5 +71,18 @@ class Product extends Model
             return true;
         }
         return false;
+    }
+
+    public function getFormattedPriceAttribute()
+    {
+        return number_format($this->price, 2) . '€';
+    }
+
+    public function getDiscountPercentageAttribute()
+    {
+        if ($this->original_price && $this->original_price > $this->price) {
+            return round((($this->original_price - $this->price) / $this->original_price) * 100);
+        }
+        return 0;
     }
 }

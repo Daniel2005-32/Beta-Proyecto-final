@@ -17,26 +17,15 @@ Route::prefix('products')->name('products.')->group(function () {
 
 // Offers
 Route::get('/ofertas', function () {
-    $offers = [
-        (object)[
-            'name' => 'PlayStation 5',
-            'price' => 449.99,
-            'original_price' => 499.99,
-            'image' => 'https://images.unsplash.com/photo-1644571580646-7048372c491a?w=500',
-            'slug' => 'ps5'
-        ],
-        (object)[
-            'name' => 'Nintendo Switch OLED',
-            'price' => 299.99,
-            'original_price' => 349.99,
-            'image' => 'https://images.unsplash.com/photo-1676261233849-0755de764396?w=500',
-            'slug' => 'switch-oled'
-        ]
-    ];
+    $offers = App\Models\Product::where('original_price', '>', 0)
+        ->whereColumn('price', '<', 'original_price')
+        ->take(8)
+        ->get();
+    
     return view('offers', compact('offers'));
 })->name('offers');
 
-// Contact
+// Contact - Ruta de Contacto AÑADIDA
 Route::get('/contacto', function () {
     return view('contact');
 })->name('contact');
@@ -44,12 +33,18 @@ Route::get('/contacto', function () {
 // Cart
 Route::post('/cart/add/{id}', [OrderController::class, 'addToCart'])->name('cart.add');
 Route::get('/cart', [OrderController::class, 'viewCart'])->name('cart.index');
+Route::post('/cart/update/{id}', [OrderController::class, 'updateCart'])->name('cart.update');
+Route::post('/cart/remove/{id}', [OrderController::class, 'removeFromCart'])->name('cart.remove');
 Route::post('/cart/checkout', [OrderController::class, 'checkout'])->name('cart.checkout');
+Route::post('/cart/clear', [OrderController::class, 'clearCart'])->name('cart.clear');
+
+// Orders
+Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show')->middleware('auth');
 
 // Auctions
 Route::get('/auctions', [AuctionController::class, 'index'])->name('auctions.index');
 Route::get('/auctions/{id}', [AuctionController::class, 'show'])->name('auctions.show');
-Route::post('/auctions/{id}/bid', [AuctionController::class, 'placeBid'])->name('auctions.bid');
+Route::post('/auctions/{id}/bid', [AuctionController::class, 'placeBid'])->name('auctions.bid')->middleware('auth');
 
 // Dashboard
 Route::get('/dashboard', function () {

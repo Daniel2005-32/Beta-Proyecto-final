@@ -5,39 +5,41 @@ namespace App\Http\Controllers;
 use App\Models\Auction;
 use App\Models\Bid;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class AuctionController extends Controller
 {
     public function index()
     {
-        $auctions = Auction::where('status', 'active')->with('product')->get();
+        $auctions = Auction::with('product.category')
+            ->where('status', 'active')
+            ->orderBy('end_time')
+            ->get();
+            
         return view('auctions.index', compact('auctions'));
     }
 
     public function show($id)
     {
-        $auction = Auction::with(['product', 'bids.user'])->findOrFail($id);
+        $auction = Auction::with('product.category', 'bids.user')->findOrFail($id);
         return view('auctions.show', compact('auction'));
     }
 
     public function placeBid(Request $request, $id)
     {
         $auction = Auction::findOrFail($id);
-        $amount = $request->input('amount');
-
-        if($amount <= $auction->current_price){
-            return back()->with('error', 'Bid must be higher than current price.');
-        }
+        
+        $request->validate([
+            'amount' => 'required|numeric|min:' . ($auction->current_bid + $auction->min_increment)
+        ]);
 
         Bid::create([
             'auction_id' => $auction->id,
-            'user_id' => Auth::id(),
-            'amount' => $amount
+            'user_id' => auth()->id(),
+            'amount' => $request->amount
         ]);
 
-        $auction->update(['current_price' => $amount, 'winner_id' => Auth::id()]);
+        $auction->update(['current_bid' => $request->amount]);
 
-        return back()->with('success', 'Bid placed successfully!');
+        return redirect()->back()->with('success', 'Puja realizada correctamente');
     }
 }

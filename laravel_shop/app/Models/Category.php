@@ -9,10 +9,20 @@ class Category extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'slug', 'description'];
+    protected $fillable = ['name', 'slug', 'description', 'image'];
 
     public function products()
     {
         return $this->hasMany(Product::class);
+    }
+
+    public function getProductCountAttribute()
+    {
+        return $this->products()->count();
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'slug';
     }
 }

@@ -41,14 +41,26 @@
                         </a>
                     </div>
 
-                    <!-- Navegación - CON COSPLAY INCLUIDO -->
+                    <!-- Navegación - CON PRODUCTOS ANIME (FUSIONADO) -->
                     <nav class="hidden md:flex space-x-6 items-center">
-                        <a href="<?php echo e(route('products.category', 'consolas')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->is('products/category/consolas') ? 'text-neon-blue' : ''); ?>">Consolas</a>
-                        <a href="<?php echo e(route('products.category', 'videojuegos')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->is('products/category/videojuegos') ? 'text-neon-blue' : ''); ?>">Videojuegos</a>
-                        <a href="<?php echo e(route('products.category', 'manga')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->is('products/category/manga') ? 'text-neon-blue' : ''); ?>">Manga</a>
-                        <a href="<?php echo e(route('products.category', 'productos-anime')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->is('products/category/productos-anime') ? 'text-neon-blue' : ''); ?>">Productos Anime</a>
-                        <a href="<?php echo e(route('products.category', 'cosplay')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->is('products/category/cosplay') ? 'text-neon-blue' : ''); ?>">Cosplay</a>
-                        <a href="<?php echo e(route('offers')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->routeIs('offers') ? 'text-neon-blue' : ''); ?>">Ofertas</a>
+                        <a href="<?php echo e(route('products.category', 'consolas')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->is('products/category/consolas') ? 'text-neon-blue' : ''); ?>">
+                            Consolas
+                        </a>
+                        <a href="<?php echo e(route('products.category', 'videojuegos')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->is('products/category/videojuegos') ? 'text-neon-blue' : ''); ?>">
+                            Videojuegos
+                        </a>
+                        <a href="<?php echo e(route('products.category', 'manga')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->is('products/category/manga') ? 'text-neon-blue' : ''); ?>">
+                            Manga
+                        </a>
+                        <a href="<?php echo e(route('products.category', 'productos-anime')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->is('products/category/productos-anime') ? 'text-neon-blue' : ''); ?>">
+                            Productos Anime
+                        </a>
+                        <a href="<?php echo e(route('products.category', 'cosplay')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->is('products/category/cosplay') ? 'text-neon-blue' : ''); ?>">
+                            Cosplay
+                        </a>
+                        <a href="<?php echo e(route('offers')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->routeIs('offers') ? 'text-neon-blue' : ''); ?>">
+                            Ofertas
+                        </a>
                     </nav>
 
                     <!-- Acciones Derecha -->
@@ -102,7 +114,7 @@
             </div>
         </main>
         
-        <!-- Footer - ACTUALIZADO CON COSPLAY -->
+        <!-- Footer -->
         <footer class="bg-black/80 border-t border-gray-800 py-12">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div class="col-span-1 md:col-span-2">
@@ -143,4 +155,5 @@
     <!-- Alpine.js para el dropdown del usuario -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
-</html><?php /**PATH /home/ctk/Documentos/Proyecto_Daniel/Proyecto-final-main/laravel_shop/resources/views/components/store-layout.blade.php ENDPATH**/ ?>
+</html>
+<?php /**PATH /home/ctk/Documentos/Proyecto_Daniel/Proyecto-final-main/laravel_shop/resources/views/components/store-layout.blade.php ENDPATH**/ ?>

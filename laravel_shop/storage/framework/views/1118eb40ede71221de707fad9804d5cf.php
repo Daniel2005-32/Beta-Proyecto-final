@@ -11,8 +11,9 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="mb-8">
-                <h1 class="text-4xl font-black text-white mb-4"><?php echo e($currentCategory['name'] ?? $categorySlug); ?></h1>
-                <p class="text-gray-400"><?php echo e($products->count()); ?> productos disponibles</p>
+                <h1 class="text-4xl font-black text-white mb-4"><?php echo e($category->name); ?></h1>
+                <p class="text-gray-400"><?php echo e($category->description); ?></p>
+                <p class="text-gray-500 mt-2"><?php echo e($products->count()); ?> productos disponibles</p>
             </div>
             
             <?php if($products->count() > 0): ?>
@@ -21,7 +22,7 @@
                         <div class="group bg-gamer-card rounded-2xl overflow-hidden border border-gray-800 hover:border-neon-blue/50 transition">
                             <img src="<?php echo e($product->image); ?>" alt="<?php echo e($product->name); ?>" class="w-full h-48 object-cover">
                             <div class="p-4">
-                                <span class="text-xs text-neon-blue uppercase"><?php echo e($product->category); ?></span>
+                                <span class="text-xs text-neon-blue uppercase"><?php echo e($product->category->name); ?></span>
                                 <h3 class="text-white font-bold text-lg mt-1"><?php echo e($product->name); ?></h3>
                                 <p class="text-gray-400 text-sm mt-2 line-clamp-2"><?php echo e($product->description); ?></p>
                                 <div class="flex items-center justify-between mt-4">
@@ -35,7 +36,7 @@
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             <?php else: ?>
-                <div class="text-center py-12">
+                <div class="text-center py-12 bg-gamer-card rounded-2xl border border-gray-800">
                     <p class="text-gray-400">No hay productos en esta categoría</p>
                 </div>
             <?php endif; ?>

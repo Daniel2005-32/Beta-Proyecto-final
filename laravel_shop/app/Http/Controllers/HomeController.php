@@ -2,30 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Data\ProductData;
+use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
     public function index()
     {
-        // Obtener productos como arrays
-        $featuredArrays = ProductData::getFeatured();
-        $trendingArrays = ProductData::getTrending();
-        $exclusiveArrays = ProductData::getByCategory('cosplay'); // Destacamos cosplay en exclusivos
-        
-        // Convertir arrays a objetos para la vista
-        $featured = collect($featuredArrays)->map(function($item) {
-            return (object) $item;
-        });
-        
-        $trending = collect($trendingArrays)->map(function($item) {
-            return (object) $item;
-        });
-        
-        $exclusive = collect($exclusiveArrays)->map(function($item) {
-            return (object) $item;
-        });
+        // Obtener productos desde la base de datos
+        $featured = Product::with('category')->where('featured', true)->get();
+        $trending = Product::with('category')->where('trending', true)->get();
+        $exclusive = Product::with('category')
+            ->whereHas('category', function($q) {
+                $q->where('slug', 'figuras');
+            })
+            ->take(4)
+            ->get();
         
         return view('home', compact('featured', 'trending', 'exclusive'));
     }

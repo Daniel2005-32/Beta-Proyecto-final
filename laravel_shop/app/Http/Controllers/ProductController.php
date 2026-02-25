@@ -2,57 +2,43 @@
 
 namespace App\Http\Controllers;
 
-use App\Data\ProductData;
+use App\Models\Product;
+use App\Models\Category;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $category = $request->get('category');
+        $categorySlug = $request->get('category');
         
-        if ($category) {
-            $productsArrays = ProductData::getByCategory($category);
-        } else {
-            $productsArrays = ProductData::getAll();
+        $query = Product::with('category');
+        
+        if ($categorySlug) {
+            $query->whereHas('category', function($q) use ($categorySlug) {
+                $q->where('slug', $categorySlug);
+            });
         }
         
-        // Convertir arrays a objetos
-        $products = collect($productsArrays)->map(function($item) {
-            return (object) $item;
-        });
+        $products = $query->get();
+        $categories = Category::all();
         
-        $categories = ProductData::getCategories();
-        
-        return view('products.index', compact('products', 'categories'));
+        return view('products.index', compact('products', 'categories')); // 👈 DEBE SER view(), NO response()->json()
     }
 
     public function show($slug)
     {
-        $productArray = ProductData::find($slug);
+        $product = Product::with('category')->where('slug', $slug)->firstOrFail();
         
-        if (!$productArray) {
-            abort(404, 'Producto no encontrado');
-        }
-        
-        // Convertir array a objeto
-        $product = (object) $productArray;
-        
-        return view('products.show', compact('product'));
+        return view('products.show', compact('product')); // 👈 DEBE SER view(), NO response()->json()
     }
 
     public function byCategory($categorySlug)
     {
-        $productsArrays = ProductData::getByCategory($categorySlug);
+        $category = Category::where('slug', $categorySlug)->firstOrFail();
+        $products = Product::where('category_id', $category->id)->with('category')->get();
+        $categories = Category::all();
         
-        // Convertir arrays a objetos
-        $products = collect($productsArrays)->map(function($item) {
-            return (object) $item;
-        });
-        
-        $categories = ProductData::getCategories();
-        $currentCategory = $categories[$categorySlug] ?? ['name' => ucfirst($categorySlug)];
-        
-        return view('products.category', compact('products', 'categories', 'currentCategory', 'categorySlug'));
+        return view('products.category', compact('products', 'categories', 'category')); // 👈 DEBE SER view()
     }
 }
