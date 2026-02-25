@@ -33,24 +33,7 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             @foreach($featured as $product)
-                <div class="group bg-gamer-card rounded-2xl overflow-hidden border border-gray-800 hover:border-neon-blue/50 transition duration-300 shadow-xl">
-                    <div class="relative overflow-hidden aspect-square">
-                        <img src="{{ $product->image ?? 'https://via.placeholder.com/400x400/161b22/00d2ff?text=' . urlencode($product->name) }}" 
-                             alt="{{ $product->name }}" 
-                             class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
-                        <div class="absolute inset-0 bg-gradient-to-t from-gamer-dark to-transparent opacity-0 group-hover:opacity-60 transition duration-300"></div>
-                    </div>
-                    <div class="p-6">
-                        <h3 class="font-bold text-lg text-white mb-1 group-hover:text-neon-blue transition truncate">{{ $product->name }}</h3>
-                        <p class="text-gray-500 text-sm mb-4 line-clamp-2">{{ $product->description }}</p>
-                        <div class="flex justify-between items-center">
-                            <span class="text-2xl font-black text-white italic">{{ number_format($product->price, 2) }}€</span>
-                            <a href="{{ route('products.show', $product->slug) }}" class="p-2 bg-gray-800 rounded-lg group-hover:bg-neon-blue group-hover:text-gamer-dark transition shadow-lg">
-                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                            </a>
-                        </div>
-                    </div>
-                </div>
+                @include('products.partials.product-card', ['product' => $product])
             @endforeach
         </div>
     </div>
@@ -62,47 +45,27 @@
         </h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             @foreach($trending as $product)
-                <div class="group bg-gamer-card rounded-2xl overflow-hidden border border-gray-800 hover:border-neon-purple/50 transition duration-300">
-                    <div class="relative overflow-hidden aspect-[4/3]">
-                        <img src="{{ $product->image ?? 'https://via.placeholder.com/400x300/161b22/9d00ff?text=' . urlencode($product->name) }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                    </div>
-                    <div class="p-5">
-                        <h3 class="font-bold text-white mb-3 group-hover:text-neon-purple transition truncate">{{ $product->name }}</h3>
-                        <div class="flex justify-between items-center">
-                            <span class="text-xl font-black text-white italic">{{ number_format($product->price, 2) }}€</span>
-                            <a href="{{ route('products.show', $product->slug) }}" class="text-xs font-black uppercase tracking-widest text-neon-purple hover:underline">Detalles</a>
-                        </div>
-                    </div>
-                </div>
+                @include('products.partials.product-card', ['product' => $product])
             @endforeach
         </div>
     </div>
     
-    <!-- Productos Exclusivos -->
+    <!-- Artículos Exclusivos -->
     <div class="mb-16">
-        <h2 class="text-3xl font-black uppercase italic tracking-tighter text-white border-l-4 border-neon-red pl-4 mb-8">
-            Artículos <span class="text-neon-red">Exclusivos</span>
-        </h2>
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="text-3xl font-black uppercase italic tracking-tighter text-white border-l-4 border-neon-red pl-4">
+                Artículos <span class="text-neon-red">Exclusivos</span>
+            </h2>
+            <a href="{{ route('products.exclusivos') }}" class="text-sm font-bold text-gray-500 hover:text-neon-red transition uppercase tracking-widest">Ver todos</a>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            @foreach($exclusive as $product)
-                <div class="group bg-gamer-card rounded-2xl overflow-hidden border border-neon-red/30 hover:border-neon-red transition duration-300 shadow-[0_0_20px_rgba(255,0,85,0.1)]">
-                    <div class="relative overflow-hidden aspect-square">
-                        <img src="{{ $product->image ?? 'https://via.placeholder.com/400x400/161b22/ff0055?text=' . urlencode($product->name) }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
-                        <div class="absolute top-4 left-4 bg-neon-red text-white text-[10px] font-black uppercase tracking-tighter px-2 py-1 rounded shadow-lg">
-                            Solo 1 disponible
-                        </div>
-                    </div>
-                    <div class="p-6">
-                        <h3 class="font-bold text-lg text-white mb-4 truncate">{{ $product->name }}</h3>
-                        <div class="flex justify-between items-center">
-                            <span class="text-2xl font-black text-neon-red italic">{{ number_format($product->price, 2) }}€</span>
-                            <a href="{{ route('products.show', $product->slug) }}" class="px-4 py-2 bg-neon-red text-white text-xs font-black uppercase tracking-widest rounded hover:scale-105 transition shadow-[0_0_15px_rgba(255,0,85,0.4)]">
-                                Comprar Ya
-                            </a>
-                        </div>
-                    </div>
+            @forelse($exclusive as $product)
+                @include('products.partials.product-card', ['product' => $product])
+            @empty
+                <div class="col-span-full text-center py-12 bg-gamer-card rounded-2xl border border-neon-red/20">
+                    <p class="text-gray-400">No hay artículos exclusivos disponibles</p>
                 </div>
-            @endforeach
+            @endforelse
         </div>
     </div>
 </x-store-layout>

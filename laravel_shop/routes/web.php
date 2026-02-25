@@ -12,6 +12,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::prefix('products')->name('products.')->group(function () {
     Route::get('/', [ProductController::class, 'index'])->name('index');
     Route::get('/category/{categorySlug}', [ProductController::class, 'byCategory'])->name('category');
+    Route::get('/exclusivos', [ProductController::class, 'exclusivos'])->name('exclusivos');
     Route::get('/{slug}', [ProductController::class, 'show'])->name('show');
 });
 
@@ -25,7 +26,7 @@ Route::get('/ofertas', function () {
     return view('offers', compact('offers'));
 })->name('offers');
 
-// Contact - Ruta de Contacto AÑADIDA
+// Contact
 Route::get('/contacto', function () {
     return view('contact');
 })->name('contact');
@@ -35,16 +36,18 @@ Route::post('/cart/add/{id}', [OrderController::class, 'addToCart'])->name('cart
 Route::get('/cart', [OrderController::class, 'viewCart'])->name('cart.index');
 Route::post('/cart/update/{id}', [OrderController::class, 'updateCart'])->name('cart.update');
 Route::post('/cart/remove/{id}', [OrderController::class, 'removeFromCart'])->name('cart.remove');
-Route::post('/cart/checkout', [OrderController::class, 'checkout'])->name('cart.checkout');
 Route::post('/cart/clear', [OrderController::class, 'clearCart'])->name('cart.clear');
+Route::post('/cart/checkout', [OrderController::class, 'checkout'])->name('cart.checkout');
 
 // Orders
 Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show')->middleware('auth');
 
-// Auctions
-Route::get('/auctions', [AuctionController::class, 'index'])->name('auctions.index');
-Route::get('/auctions/{id}', [AuctionController::class, 'show'])->name('auctions.show');
-Route::post('/auctions/{id}/bid', [AuctionController::class, 'placeBid'])->name('auctions.bid')->middleware('auth');
+// Auctions - PROTEGIDAS CON AUTH
+Route::middleware(['auth'])->prefix('auctions')->name('auctions.')->group(function () {
+    Route::get('/', [AuctionController::class, 'index'])->name('index');
+    Route::get('/{id}', [AuctionController::class, 'show'])->name('show');
+    Route::post('/{id}/bid', [AuctionController::class, 'placeBid'])->name('bid');
+});
 
 // Dashboard
 Route::get('/dashboard', function () {

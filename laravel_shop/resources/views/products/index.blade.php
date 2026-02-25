@@ -1,44 +1,51 @@
 <x-store-layout>
     <div class="py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Filtro de categorías -->
+            <!-- Cabecera con contadores -->
             <div class="mb-8">
-                <h2 class="text-2xl font-bold text-white mb-4">Categorías</h2>
-                <div class="flex flex-wrap gap-4">
-                    <a href="{{ route('products.index') }}" class="px-4 py-2 rounded-full {{ !request('category') ? 'bg-neon-blue text-gamer-dark' : 'bg-gamer-card text-gray-400 hover:text-white' }} transition">
-                        Todos
+                <h1 class="text-4xl font-black text-white mb-4">Catálogo de Productos</h1>
+                <p class="text-gray-400">{{ $products->total() }} productos disponibles</p>
+            </div>
+
+            <!-- Filtros rápidos por categoría -->
+            <div class="mb-8">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-3">Filtrar por categoría:</h2>
+                <div class="flex flex-wrap gap-3">
+                    <a href="{{ route('products.index') }}" 
+                       class="px-4 py-2 rounded-full text-sm font-bold transition 
+                       {{ !request('category') && !request('exclusive') ? 'bg-neon-blue text-gamer-dark' : 'bg-gamer-card text-gray-400 hover:text-white' }}">
+                        Todos ({{ $categories->sum('products_count') }})
                     </a>
-                    @foreach($categories as $slug => $category)
-                        <a href="{{ route('products.category', $slug) }}" class="px-4 py-2 rounded-full {{ request('category') == $slug ? 'bg-neon-blue text-gamer-dark' : 'bg-gamer-card text-gray-400 hover:text-white' }} transition">
-                            {{ $category['name'] }} ({{ $category['count'] }})
+                    
+                    @foreach($categories as $category)
+                        <a href="{{ route('products.index') }}?category={{ $category->slug }}" 
+                           class="px-4 py-2 rounded-full text-sm font-bold transition
+                           {{ request('category') == $category->slug ? 'bg-neon-blue text-gamer-dark' : 'bg-gamer-card text-gray-400 hover:text-white' }}">
+                            {{ $category->name }} ({{ $category->products_count }})
                         </a>
                     @endforeach
+                    
+                    <a href="{{ route('products.exclusivos') }}" 
+                       class="px-4 py-2 rounded-full text-sm font-bold transition bg-gamer-card text-neon-red hover:bg-neon-red hover:text-white border border-neon-red/30">
+                        🔥 Exclusivos ({{ App\Models\Product::where('is_exclusive', true)->count() }})
+                    </a>
                 </div>
             </div>
 
-            <!-- Lista de productos -->
+            <!-- Grid de productos -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                @forelse($products as $slug => $product)
-                    @php $product = (object) $product; @endphp
-                    <div class="group bg-gamer-card rounded-2xl overflow-hidden border border-gray-800 hover:border-neon-blue/50 transition">
-                        <img src="{{ $product->image }}" alt="{{ $product->name }}" class="w-full h-48 object-cover">
-                        <div class="p-4">
-                            <span class="text-xs text-neon-blue uppercase">{{ $product->category }}</span>
-                            <h3 class="text-white font-bold text-lg mt-1">{{ $product->name }}</h3>
-                            <p class="text-gray-400 text-sm mt-2 line-clamp-2">{{ $product->description }}</p>
-                            <div class="flex items-center justify-between mt-4">
-                                <span class="text-2xl font-bold text-neon-blue">{{ number_format($product->price, 2) }}€</span>
-                                <a href="{{ route('products.show', $product->slug) }}" class="px-4 py-2 bg-neon-blue/10 text-neon-blue rounded-lg hover:bg-neon-blue hover:text-gamer-dark transition">
-                                    Ver
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+                @forelse($products as $product)
+                    @include('products.partials.product-card', ['product' => $product])
                 @empty
-                    <div class="col-span-full text-center py-12">
-                        <p class="text-gray-400">No hay productos disponibles</p>
+                    <div class="col-span-full text-center py-12 bg-gamer-card rounded-2xl border border-gray-800">
+                        <p class="text-gray-400">No hay productos disponibles en esta categoría</p>
                     </div>
                 @endforelse
+            </div>
+
+            <!-- Paginación -->
+            <div class="mt-8">
+                {{ $products->links() }}
             </div>
         </div>
     </div>

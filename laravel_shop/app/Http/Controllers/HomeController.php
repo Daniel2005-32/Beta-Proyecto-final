@@ -10,13 +10,21 @@ class HomeController extends Controller
 {
     public function index()
     {
-        // Obtener productos desde la base de datos
-        $featured = Product::with('category')->where('featured', true)->get();
-        $trending = Product::with('category')->where('trending', true)->get();
-        $exclusive = Product::with('category')
-            ->whereHas('category', function($q) {
-                $q->where('slug', 'figuras');
-            })
+        // Productos destacados (featured)
+        $featured = Product::where('featured', true)
+            ->where('stock', '>', 0)
+            ->take(4)
+            ->get();
+            
+        // Productos en tendencia (trending)
+        $trending = Product::where('trending', true)
+            ->where('stock', '>', 0)
+            ->take(4)
+            ->get();
+        
+        // Productos exclusivos (is_exclusive)
+        $exclusive = Product::where('is_exclusive', true)
+            ->where('stock', '>', 0)
             ->take(4)
             ->get();
         
