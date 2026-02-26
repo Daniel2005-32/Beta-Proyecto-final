@@ -10,7 +10,7 @@
 <?php $component->withAttributes([]); ?>
     <div class="py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Cabecera -->
+            <!-- Cabecera con botones -->
             <div class="flex justify-between items-center mb-8">
                 <div>
                     <h1 class="text-4xl font-black text-white mb-2">
@@ -18,10 +18,19 @@
                     </h1>
                     <p class="text-gray-400">Administra todos los usuarios del sistema</p>
                 </div>
-                <a href="<?php echo e(route('admin.users.create')); ?>" 
-                   class="px-6 py-3 bg-neon-blue text-gamer-dark font-bold rounded-lg hover:scale-105 transition shadow-[0_0_20px_rgba(0,210,255,0.4)]">
-                    + Nuevo Usuario
-                </a>
+                <div class="flex space-x-3">
+                    <!-- Botón para limpiar chat -->
+                    <a href="<?php echo e(route('admin.clean.messages')); ?>" 
+                       class="px-6 py-3 bg-neon-purple text-white font-bold rounded-lg hover:scale-105 transition shadow-[0_0_20px_rgba(157,0,255,0.4)]"
+                       onclick="return confirm('¿Eliminar todos los mensajes del chat de más de 1 hora?')">
+                        🗑️ Limpiar Chat
+                    </a>
+                    <!-- Botón para nuevo usuario -->
+                    <a href="<?php echo e(route('admin.users.create')); ?>" 
+                       class="px-6 py-3 bg-neon-blue text-gamer-dark font-bold rounded-lg hover:scale-105 transition shadow-[0_0_20px_rgba(0,210,255,0.4)]">
+                        + Nuevo Usuario
+                    </a>
+                </div>
             </div>
 
             <!-- Mensajes -->

@@ -15,8 +15,8 @@ class Kernel extends ConsoleKernel
         // Ejecutar cada hora para eliminar mensajes de más de 1 hora
         $schedule->command('messages:delete-old --hours=1')->hourly();
         
-        // También puedes mantener un registro de ejecución
-        $schedule->command('messages:delete-old --hours=1')->everyMinute(); // Para pruebas (cambiar después)
+        // Para pruebas (cada minuto) - descomenta para probar
+        // $schedule->command('messages:delete-old --hours=1')->everyMinute();
     }
 
     /**
@@ -29,3 +29,8 @@ class Kernel extends ConsoleKernel
         require base_path('routes/console.php');
     }
 }
+    protected function schedule(Schedule $schedule)
+    {
+        // Ejecutar cada minuto para finalizar subastas
+        $schedule->command('auctions:end')->everyMinute();
+    }

@@ -60,23 +60,24 @@
                                   class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-neon-blue">{{ old('description') }}</textarea>
                     </div>
 
+                    <!-- CARACTERÍSTICAS -->
                     <div class="grid grid-cols-3 gap-4">
-                        <label class="flex items-center space-x-3">
-                            <input type="checkbox" name="featured" value="1"
-                                   class="rounded bg-gray-800 border-gray-700 text-neon-blue">
-                            <span class="text-gray-300">Destacado</span>
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" name="featured" value="1" {{ old('featured') ? 'checked' : '' }}
+                                   class="w-5 h-5 rounded bg-gray-800 border-gray-700 text-neon-blue focus:ring-neon-blue">
+                            <span class="text-gray-300">Producto destacado</span>
                         </label>
 
-                        <label class="flex items-center space-x-3">
-                            <input type="checkbox" name="trending" value="1"
-                                   class="rounded bg-gray-800 border-gray-700 text-neon-purple">
-                            <span class="text-gray-300">Tendencia</span>
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" name="trending" value="1" {{ old('trending') ? 'checked' : '' }}
+                                   class="w-5 h-5 rounded bg-gray-800 border-gray-700 text-neon-purple focus:ring-neon-purple">
+                            <span class="text-gray-300">Producto en tendencia</span>
                         </label>
 
-                        <label class="flex items-center space-x-3">
-                            <input type="checkbox" name="is_exclusive" value="1"
-                                   class="rounded bg-gray-800 border-gray-700 text-neon-red">
-                            <span class="text-gray-300">Exclusivo 🔥</span>
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" name="is_exclusive" value="1" {{ old('is_exclusive') ? 'checked' : '' }}
+                                   class="w-5 h-5 rounded bg-gray-800 border-gray-700 text-neon-red focus:ring-neon-red">
+                            <span class="text-gray-300">Producto exclusivo 🔥</span>
                         </label>
                     </div>
 

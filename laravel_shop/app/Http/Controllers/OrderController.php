@@ -7,7 +7,6 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Gate;
 
 class OrderController extends Controller
 {
@@ -22,10 +21,11 @@ class OrderController extends Controller
         $cart = Session::get('cart', []);
         
         if (isset($cart[$id])) {
+            // Verificar que no exceda el stock
             if ($product->stock > $cart[$id]['quantity']) {
                 $cart[$id]['quantity']++;
             } else {
-                return redirect()->back()->with('error', 'Stock insuficiente');
+                return redirect()->back()->with('error', 'Stock insuficiente (máximo ' . $product->stock . ' unidades)');
             }
         } else {
             $cart[$id] = [
@@ -58,13 +58,45 @@ class OrderController extends Controller
         if (isset($cart[$id])) {
             $product = Product::find($id);
             
+            // Validar que la cantidad no exceda el stock
             if ($product && $product->stock >= $request->quantity) {
                 $cart[$id]['quantity'] = $request->quantity;
                 Session::put('cart', $cart);
+                
+                // Calcular nuevo total
+                $total = array_sum(array_map(function($item) {
+                    return $item['price'] * $item['quantity'];
+                }, $cart));
+                
+                // Si es petición AJAX, devolver JSON
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'subtotal' => number_format($total, 2),
+                        'total' => number_format($total, 2)
+                    ]);
+                }
+                
+                return redirect()->route('cart.index')->with('success', 'Carrito actualizado');
+            } else {
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Stock insuficiente'
+                    ], 400);
+                }
+                return redirect()->route('cart.index')->with('error', 'Stock insuficiente. Máximo ' . ($product ? $product->stock : 0) . ' unidades');
             }
         }
         
-        return redirect()->route('cart.index')->with('success', 'Carrito actualizado');
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Producto no encontrado'
+            ], 404);
+        }
+        
+        return redirect()->route('cart.index')->with('error', 'Producto no encontrado en el carrito');
     }
 
     public function removeFromCart($id)
@@ -79,6 +111,12 @@ class OrderController extends Controller
         return redirect()->route('cart.index')->with('success', 'Producto eliminado del carrito');
     }
 
+    public function clearCart()
+    {
+        Session::forget('cart');
+        return redirect()->route('cart.index')->with('success', 'Carrito vaciado correctamente');
+    }
+
     public function checkout(Request $request)
     {
         $cart = Session::get('cart', []);
@@ -87,11 +125,15 @@ class OrderController extends Controller
             return redirect()->route('cart.index')->with('error', 'El carrito está vacío');
         }
 
-        // Verificar stock
+        // Verificar stock de todos los productos
         foreach ($cart as $productId => $item) {
             $product = Product::find($productId);
-            if (!$product || $product->stock < $item['quantity']) {
-                return redirect()->route('cart.index')->with('error', 'Stock insuficiente para ' . $item['name']);
+            if (!$product) {
+                return redirect()->route('cart.index')->with('error', 'Producto no encontrado');
+            }
+            if ($product->stock < $item['quantity']) {
+                return redirect()->route('cart.index')->with('error', 
+                    "Stock insuficiente para {$item['name']}. Disponible: {$product->stock}, solicitado: {$item['quantity']}");
             }
         }
 
@@ -106,6 +148,8 @@ class OrderController extends Controller
         ]);
 
         foreach ($cart as $productId => $item) {
+            $product = Product::find($productId);
+            
             OrderItem::create([
                 'order_id' => $order->id,
                 'product_id' => $productId,
@@ -114,7 +158,6 @@ class OrderController extends Controller
             ]);
 
             // Reducir stock
-            $product = Product::find($productId);
             $product->decreaseStock($item['quantity']);
         }
 
@@ -125,17 +168,10 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        // Opción 1: Verificar manualmente que el usuario es el dueño
         if (auth()->id() !== $order->user_id) {
             abort(403, 'No tienes permiso para ver este pedido');
         }
         
         return view('orders.show', compact('order'));
-    }
-
-    public function clearCart()
-    {
-        Session::forget('cart');
-        return redirect()->route('cart.index')->with('success', 'Carrito vaciado correctamente');
     }
 }

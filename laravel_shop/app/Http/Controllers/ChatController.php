@@ -20,8 +20,7 @@ class ChatController extends Controller
                     'id' => $msg->id,
                     'user_id' => $msg->user_id,
                     'user_name' => $msg->user->name,
-                    'message' => CensorHelper::censor($msg->message), // Censurar aquí
-                    'original_message' => $msg->message, // Solo para debugging (opcional)
+                    'message' => CensorHelper::censor($msg->message),
                     'time' => $msg->created_at->diffForHumans()
                 ];
             })
@@ -42,24 +41,49 @@ class ChatController extends Controller
             'message' => 'required|string|max:500',
         ]);
 
-        // Verificar si contiene malas palabras (opcional - puedes rechazar o aceptar)
-        $containsBadWords = CensorHelper::containsBadWords($request->message);
-        
-        // Guardar el mensaje original (sin censurar en BD)
+        // Guardar el mensaje
         $message = Message::create([
             'user_id' => Auth::id(),
-            'message' => $request->message, // Guardamos el original
+            'message' => $request->message,
         ]);
 
-        // Para la respuesta, devolvemos el mensaje censurado
+        // ============================================
+        // LIMPIEZA AUTOMÁTICA: Eliminar mensajes de más de 1 hora
+        // ============================================
+        $limitDate = now()->subHours(1);
+        $deleted = Message::where('created_at', '<', $limitDate)->delete();
+        
+        // Opcional: Registrar en log cuántos se eliminaron
+        if ($deleted > 0) {
+            \Log::info("🧹 Limpieza automática: {$deleted} mensajes eliminados (más de 1 hora)");
+        }
+
         return response()->json([
             'success' => true,
             'id' => $message->id,
             'user_id' => Auth::id(),
             'user_name' => Auth::user()->name,
-            'message' => CensorHelper::censor($message->message), // Censurar para mostrar
-            'time' => $message->created_at->diffForHumans(),
-            'was_censored' => $containsBadWords
+            'message' => CensorHelper::censor($message->message),
+            'time' => $message->created_at->diffForHumans()
+        ]);
+    }
+
+    /**
+     * Método adicional para limpieza manual (opcional)
+     */
+    public function clean()
+    {
+        if (!auth()->check() || !auth()->user()->is_admin) {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
+        $limitDate = now()->subHours(1);
+        $deleted = Message::where('created_at', '<', $limitDate)->delete();
+
+        return response()->json([
+            'success' => true,
+            'deleted' => $deleted,
+            'message' => "Se eliminaron {$deleted} mensajes antiguos"
         ]);
     }
 }

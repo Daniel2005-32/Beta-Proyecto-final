@@ -11,9 +11,9 @@ class ProductController extends Controller
 {
     public function index()
     {
-        // TEMPORAL: Permitir acceso a cualquier usuario autenticado
-        if (!auth()->check()) {
-            abort(403, 'Debes iniciar sesión');
+        // Verificación manual de admin
+        if (!auth()->check() || !auth()->user()->is_admin) {
+            abort(403, 'Acceso no autorizado');
         }
 
         $products = Product::with('category')->paginate(20);
@@ -22,8 +22,8 @@ class ProductController extends Controller
 
     public function create()
     {
-        if (!auth()->check()) {
-            abort(403, 'Debes iniciar sesión');
+        if (!auth()->check() || !auth()->user()->is_admin) {
+            abort(403, 'Acceso no autorizado');
         }
 
         $categories = Category::all();
@@ -32,8 +32,8 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        if (!auth()->check()) {
-            abort(403, 'Debes iniciar sesión');
+        if (!auth()->check() || !auth()->user()->is_admin) {
+            abort(403, 'Acceso no autorizado');
         }
 
         $request->validate([
@@ -46,14 +46,20 @@ class ProductController extends Controller
             'image' => 'required|url'
         ]);
 
-        Product::create($request->all());
+        // Manejar checkboxes (si no vienen, son false)
+        $data = $request->all();
+        $data['featured'] = $request->has('featured') ? true : false;
+        $data['trending'] = $request->has('trending') ? true : false;
+        $data['is_exclusive'] = $request->has('is_exclusive') ? true : false;
+
+        Product::create($data);
         return redirect()->route('admin.products.index')->with('success', 'Producto creado correctamente');
     }
 
     public function edit(Product $product)
     {
-        if (!auth()->check()) {
-            abort(403, 'Debes iniciar sesión');
+        if (!auth()->check() || !auth()->user()->is_admin) {
+            abort(403, 'Acceso no autorizado');
         }
 
         $categories = Category::all();
@@ -62,8 +68,8 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
-        if (!auth()->check()) {
-            abort(403, 'Debes iniciar sesión');
+        if (!auth()->check() || !auth()->user()->is_admin) {
+            abort(403, 'Acceso no autorizado');
         }
 
         $request->validate([
@@ -72,14 +78,20 @@ class ProductController extends Controller
             'stock' => 'required|integer|min:0',
         ]);
 
-        $product->update($request->all());
+        // Manejar checkboxes (si no vienen, son false)
+        $data = $request->all();
+        $data['featured'] = $request->has('featured') ? true : false;
+        $data['trending'] = $request->has('trending') ? true : false;
+        $data['is_exclusive'] = $request->has('is_exclusive') ? true : false;
+
+        $product->update($data);
         return redirect()->route('admin.products.index')->with('success', 'Producto actualizado correctamente');
     }
 
     public function destroy(Product $product)
     {
-        if (!auth()->check()) {
-            abort(403, 'Debes iniciar sesión');
+        if (!auth()->check() || !auth()->user()->is_admin) {
+            abort(403, 'Acceso no autorizado');
         }
 
         $product->delete();
