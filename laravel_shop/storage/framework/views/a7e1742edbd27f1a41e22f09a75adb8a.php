@@ -26,7 +26,7 @@
         <header class="sticky top-0 z-50 bg-gamer-dark/90 backdrop-blur-sm border-b border-neon-purple/30">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-20">
-                    <!-- Logo -->
+                    <!-- Logo (único enlace a inicio) -->
                     <div class="flex-shrink-0 flex items-center">
                         <a href="<?php echo e(route('home')); ?>" class="flex items-center group">
                             <img src="<?php echo e(asset('images/logo.png')); ?>" alt="Gamer Guild Logo" class="h-16 w-auto transition-transform group-hover:scale-110">
@@ -36,7 +36,7 @@
                         </a>
                     </div>
 
-                    <!-- Menú original -->
+                    <!-- Menú con categorías (sin inicio duplicado) -->
                     <nav class="hidden md:flex space-x-6 items-center">
                         <a href="<?php echo e(route('products.category', 'consolas')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->is('products/category/consolas') ? 'text-neon-blue' : ''); ?>">Consolas</a>
                         <a href="<?php echo e(route('products.category', 'videojuegos')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->is('products/category/videojuegos') ? 'text-neon-blue' : ''); ?>">Videojuegos</a>
@@ -65,11 +65,9 @@
                                     </svg>
                                 </button>
                                 <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-gamer-card border border-gray-700 rounded-md shadow-xl py-1 z-50">
-                                    <!-- SOLO PARA ADMIN -->
-                                    <a href="<?php echo e(route('admin.products.index')); ?>" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-blue">
-                                        👑 Panel Admin
-                                    </a>
-                                    <div class="border-t border-gray-800 my-1"></div>
+                                    <?php if(Auth::user()->is_admin): ?>
+                                        <a href="<?php echo e(route('admin.products.index')); ?>" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-blue">👑 Panel Admin</a>
+                                    <?php endif; ?>
                                     <form method="POST" action="<?php echo e(route('logout')); ?>">
                                         <?php echo csrf_field(); ?>
                                         <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-red">
@@ -130,6 +128,9 @@
             </div>
         </footer>
     </div>
+
+    <!-- CHAT FLOTANTE -->
+    <?php echo $__env->make('components.floating-chat', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>

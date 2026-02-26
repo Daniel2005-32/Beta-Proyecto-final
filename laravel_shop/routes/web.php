@@ -4,6 +4,7 @@ use App\Http\Controllers\AuctionController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ChatController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -16,9 +17,18 @@ Route::prefix('products')->name('products.')->group(function () {
     Route::get('/{slug}', [ProductController::class, 'show'])->name('show');
 });
 
-// Admin routes (sin middleware, la verificación está en el controlador)
-Route::prefix('admin')->name('admin.')->group(function () {
+// Admin routes
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::resource('products', App\Http\Controllers\Admin\ProductController::class);
+});
+
+// Chat routes (API)
+Route::prefix('chat')->name('chat.')->group(function () {
+    // Ruta para obtener mensajes (GET)
+    Route::get('/', [ChatController::class, 'index'])->name('index');
+    Route::get('/refresh', [ChatController::class, 'refresh'])->name('refresh');
+    // Ruta para enviar mensajes (POST) - requiere auth
+    Route::post('/', [ChatController::class, 'store'])->name('store')->middleware('auth');
 });
 
 // Offers
@@ -67,4 +77,5 @@ Route::middleware('auth')->prefix('profile')->name('profile.')->group(function (
     })->name('destroy');
 });
 
+// Auth routes
 require __DIR__.'/auth.php';
