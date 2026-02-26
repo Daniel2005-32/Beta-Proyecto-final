@@ -6,6 +6,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AddressController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -93,6 +94,19 @@ Route::prefix('auctions')->name('auctions.')->middleware('auth')->group(function
 });
 
 // ============================================
+// RUTAS DE DIRECCIONES
+// ============================================
+Route::middleware(['auth'])->prefix('addresses')->name('addresses.')->group(function () {
+    Route::get('/', [AddressController::class, 'index'])->name('index');
+    Route::get('/create', [AddressController::class, 'create'])->name('create');
+    Route::post('/', [AddressController::class, 'store'])->name('store');
+    Route::get('/{address}/edit', [AddressController::class, 'edit'])->name('edit');
+    Route::put('/{address}', [AddressController::class, 'update'])->name('update');
+    Route::delete('/{address}', [AddressController::class, 'destroy'])->name('destroy');
+    Route::get('/{address}/set-default', [AddressController::class, 'setDefault'])->name('set-default');
+});
+
+// ============================================
 // RUTAS DE CHAT
 // ============================================
 Route::prefix('chat')->name('chat.')->group(function () {
@@ -135,7 +149,8 @@ Route::get('/cart', [OrderController::class, 'viewCart'])->name('cart.index');
 Route::post('/cart/update/{id}', [OrderController::class, 'updateCart'])->name('cart.update');
 Route::post('/cart/remove/{id}', [OrderController::class, 'removeFromCart'])->name('cart.remove');
 Route::post('/cart/clear', [OrderController::class, 'clearCart'])->name('cart.clear');
-Route::post('/cart/checkout', [OrderController::class, 'checkout'])->name('cart.checkout');
+Route::get('/checkout', [OrderController::class, 'checkoutForm'])->name('cart.checkout.form')->middleware('auth');
+Route::post('/checkout', [OrderController::class, 'checkout'])->name('cart.checkout')->middleware('auth');
 
 // ============================================
 // RUTAS DE PEDIDOS

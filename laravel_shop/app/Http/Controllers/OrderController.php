@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Address;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
@@ -21,7 +22,6 @@ class OrderController extends Controller
         $cart = Session::get('cart', []);
         
         if (isset($cart[$id])) {
-            // Verificar que no exceda el stock
             if ($product->stock > $cart[$id]['quantity']) {
                 $cart[$id]['quantity']++;
             } else {
@@ -58,17 +58,14 @@ class OrderController extends Controller
         if (isset($cart[$id])) {
             $product = Product::find($id);
             
-            // Validar que la cantidad no exceda el stock
             if ($product && $product->stock >= $request->quantity) {
                 $cart[$id]['quantity'] = $request->quantity;
                 Session::put('cart', $cart);
                 
-                // Calcular nuevo total
                 $total = array_sum(array_map(function($item) {
                     return $item['price'] * $item['quantity'];
                 }, $cart));
                 
-                // Si es petición AJAX, devolver JSON
                 if ($request->wantsJson()) {
                     return response()->json([
                         'success' => true,
@@ -87,13 +84,6 @@ class OrderController extends Controller
                 }
                 return redirect()->route('cart.index')->with('error', 'Stock insuficiente. Máximo ' . ($product ? $product->stock : 0) . ' unidades');
             }
-        }
-        
-        if ($request->wantsJson()) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Producto no encontrado'
-            ], 404);
         }
         
         return redirect()->route('cart.index')->with('error', 'Producto no encontrado en el carrito');
@@ -117,6 +107,25 @@ class OrderController extends Controller
         return redirect()->route('cart.index')->with('success', 'Carrito vaciado correctamente');
     }
 
+    public function checkoutForm()
+    {
+        if (!auth()->check()) {
+            return redirect()->route('login');
+        }
+
+        $cart = Session::get('cart', []);
+        if (empty($cart)) {
+            return redirect()->route('cart.index')->with('error', 'El carrito está vacío');
+        }
+
+        $addresses = Address::where('user_id', auth()->id())->get();
+        $total = array_sum(array_map(function($item) {
+            return $item['price'] * $item['quantity'];
+        }, $cart));
+
+        return view('cart.checkout', compact('cart', 'total', 'addresses'));
+    }
+
     public function checkout(Request $request)
     {
         $cart = Session::get('cart', []);
@@ -125,7 +134,20 @@ class OrderController extends Controller
             return redirect()->route('cart.index')->with('error', 'El carrito está vacío');
         }
 
-        // Verificar stock de todos los productos
+        if (!auth()->check()) {
+            return redirect()->route('login');
+        }
+
+        $request->validate([
+            'address_id' => 'required|exists:addresses,id'
+        ]);
+
+        $address = Address::find($request->address_id);
+        if ($address->user_id != auth()->id()) {
+            abort(403);
+        }
+
+        // Verificar stock
         foreach ($cart as $productId => $item) {
             $product = Product::find($productId);
             if (!$product) {
@@ -143,6 +165,7 @@ class OrderController extends Controller
 
         $order = Order::create([
             'user_id' => auth()->id(),
+            'address_id' => $request->address_id,
             'total' => $total,
             'status' => 'pending'
         ]);
@@ -157,7 +180,6 @@ class OrderController extends Controller
                 'price' => $item['price']
             ]);
 
-            // Reducir stock
             $product->decreaseStock($item['quantity']);
         }
 

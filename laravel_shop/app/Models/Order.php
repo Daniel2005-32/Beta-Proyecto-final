@@ -9,7 +9,7 @@ class Order extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'total', 'status'];
+    protected $fillable = ['user_id', 'address_id', 'total', 'status'];
 
     protected $casts = [
         'total' => 'decimal:2'
@@ -23,6 +23,11 @@ class Order extends Model
     public function items()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function address()
+    {
+        return $this->belongsTo(Address::class);
     }
 
     public function getFormattedTotalAttribute()

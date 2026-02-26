@@ -10,48 +10,35 @@
 <?php $component->withAttributes([]); ?>
     <div class="py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Cabecera con contadores -->
             <div class="mb-8">
-                <h1 class="text-4xl font-black text-white mb-4">Catálogo de Productos</h1>
-                <p class="text-gray-400"><?php echo e($products->total()); ?> productos disponibles</p>
+                <h1 class="text-4xl font-black text-white mb-4"><?php echo e($category->name); ?></h1>
+                <p class="text-gray-400"><?php echo e($category->description); ?></p>
+                <p class="text-gray-500 mt-2"><?php echo e($products->total()); ?> productos disponibles en <?php echo e($category->name); ?></p>
             </div>
+            
+            <!-- Filtros rápidos -->
+            <div class="mb-8 flex flex-wrap gap-3">
+                <a href="<?php echo e(route('products.index')); ?>" class="px-4 py-2 rounded-full text-sm font-bold bg-gamer-card text-gray-400 hover:text-white transition">
+                    ← Ver todas las categorías
+                </a>
+                <a href="<?php echo e(route('products.exclusivos')); ?>?category=<?php echo e($category->slug); ?>" 
+                   class="px-4 py-2 rounded-full text-sm font-bold bg-gamer-card text-neon-red hover:bg-neon-red hover:text-white transition border border-neon-red/30">
+                    🔥 Exclusivos en <?php echo e($category->name); ?>
 
-            <!-- Filtros rápidos por categoría -->
-            <div class="mb-8">
-                <h2 class="text-sm font-bold uppercase tracking-wider text-gray-500 mb-3">Filtrar por categoría:</h2>
-                <div class="flex flex-wrap gap-3">
-                    <a href="<?php echo e(route('products.index')); ?>" 
-                       class="px-4 py-2 rounded-full text-sm font-bold transition 
-                       <?php echo e(!request('category') && !request('exclusive') ? 'bg-neon-blue text-gamer-dark' : 'bg-gamer-card text-gray-400 hover:text-white'); ?>">
-                        Todos (<?php echo e($categories->sum('products_count')); ?>)
-                    </a>
-                    
-                    <?php $__currentLoopData = $categories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        <a href="<?php echo e(route('products.index')); ?>?category=<?php echo e($category->slug); ?>" 
-                           class="px-4 py-2 rounded-full text-sm font-bold transition
-                           <?php echo e(request('category') == $category->slug ? 'bg-neon-blue text-gamer-dark' : 'bg-gamer-card text-gray-400 hover:text-white'); ?>">
-                            <?php echo e($category->name); ?> (<?php echo e($category->products_count); ?>)
-                        </a>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                    
-                    <a href="<?php echo e(route('products.exclusivos')); ?>" 
-                       class="px-4 py-2 rounded-full text-sm font-bold transition bg-gamer-card text-neon-red hover:bg-neon-red hover:text-white border border-neon-red/30">
-                        🔥 Exclusivos (<?php echo e(App\Models\Product::where('is_exclusive', true)->count()); ?>)
-                    </a>
-                </div>
+                </a>
             </div>
-
+            
             <!-- Grid de productos -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 <?php $__empty_1 = true; $__currentLoopData = $products; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $product): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                     <?php echo $__env->make('products.partials.product-card', ['product' => $product], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <div class="col-span-full text-center py-12 bg-gamer-card rounded-2xl border border-gray-800">
-                        <p class="text-gray-400">No hay productos disponibles en esta categoría</p>
+                        <p class="text-gray-400">No hay productos en esta categoría</p>
                     </div>
                 <?php endif; ?>
             </div>
-
+            
             <!-- Paginación -->
             <div class="mt-8">
                 <?php echo e($products->links()); ?>
@@ -69,4 +56,4 @@
 <?php $component = $__componentOriginalfa92fd5562a0c82e62f2e625d459a2d3; ?>
 <?php unset($__componentOriginalfa92fd5562a0c82e62f2e625d459a2d3); ?>
 <?php endif; ?>
-<?php /**PATH /home/ctk/Documentos/Proyecto_Daniel/Proyecto-final-main/laravel_shop/resources/views/products/index.blade.php ENDPATH**/ ?>
+<?php /**PATH /home/ctk/Documentos/Proyecto_Daniel/Proyecto-final-main/laravel_shop/resources/views/products/category.blade.php ENDPATH**/ ?>

@@ -1,17 +1,26 @@
-<x-store-layout>
+<?php if (isset($component)) { $__componentOriginalfa92fd5562a0c82e62f2e625d459a2d3 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalfa92fd5562a0c82e62f2e625d459a2d3 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.store-layout','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('store-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
     <div class="py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h1 class="text-4xl font-black text-white mb-8">🛒 Tu Carrito</h1>
             
-            @php
+            <?php
                 $cart = session('cart', []);
                 $total = 0;
                 foreach($cart as $id => $item) {
                     $total += $item['price'] * $item['quantity'];
                 }
-            @endphp
+            ?>
 
-            @if(empty($cart))
+            <?php if(empty($cart)): ?>
                 <!-- Carrito vacío -->
                 <div class="bg-gamer-card rounded-2xl border border-neon-purple/20 p-12 text-center">
                     <svg class="w-24 h-24 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -19,11 +28,11 @@
                     </svg>
                     <h2 class="text-2xl font-bold text-white mb-2">Tu carrito está vacío</h2>
                     <p class="text-gray-400 mb-6">¡Explora nuestros productos y encuentra algo increíble!</p>
-                    <a href="{{ route('products.index') }}" class="inline-block px-8 py-4 bg-neon-blue text-gamer-dark font-black rounded-full hover:scale-105 transition shadow-[0_0_20px_rgba(0,210,255,0.4)]">
+                    <a href="<?php echo e(route('products.index')); ?>" class="inline-block px-8 py-4 bg-neon-blue text-gamer-dark font-black rounded-full hover:scale-105 transition shadow-[0_0_20px_rgba(0,210,255,0.4)]">
                         Ver Productos
                     </a>
                 </div>
-            @else
+            <?php else: ?>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <!-- Lista de productos -->
                     <div class="lg:col-span-2">
@@ -39,27 +48,27 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($cart as $id => $item)
-                                        @php
+                                    <?php $__currentLoopData = $cart; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $id => $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php
                                             $product = \App\Models\Product::find($id);
                                             $maxStock = $product ? $product->stock : 0;
-                                        @endphp
+                                        ?>
                                         <tr class="border-b border-gray-800 hover:bg-gray-800/50 transition">
                                             <td class="px-6 py-4">
                                                 <div class="flex items-center space-x-3">
-                                                    <img src="{{ $item['image'] }}" alt="{{ $item['name'] }}" class="w-12 h-12 object-cover rounded">
-                                                    <span class="text-white font-medium">{{ $item['name'] }}</span>
+                                                    <img src="<?php echo e($item['image']); ?>" alt="<?php echo e($item['name']); ?>" class="w-12 h-12 object-cover rounded">
+                                                    <span class="text-white font-medium"><?php echo e($item['name']); ?></span>
                                                 </div>
                                             </td>
-                                            <td class="px-6 py-4 text-gray-300">{{ number_format($item['price'], 2) }}€</td>
+                                            <td class="px-6 py-4 text-gray-300"><?php echo e(number_format($item['price'], 2)); ?>€</td>
                                             <td class="px-6 py-4">
-                                                <form action="{{ route('cart.update', $id) }}" method="POST" class="flex items-center space-x-2">
-                                                    @csrf
+                                                <form action="<?php echo e(route('cart.update', $id)); ?>" method="POST" class="flex items-center space-x-2">
+                                                    <?php echo csrf_field(); ?>
                                                     <input type="number" 
                                                            name="quantity" 
-                                                           value="{{ $item['quantity'] }}" 
+                                                           value="<?php echo e($item['quantity']); ?>" 
                                                            min="1" 
-                                                           max="{{ $maxStock }}"
+                                                           max="<?php echo e($maxStock); ?>"
                                                            class="w-16 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-white focus:outline-none focus:border-neon-blue">
                                                     <button type="submit" class="text-neon-blue hover:text-neon-blue/80 transition" title="Actualizar">
                                                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,10 +77,10 @@
                                                     </button>
                                                 </form>
                                             </td>
-                                            <td class="px-6 py-4 text-white font-bold">{{ number_format($item['price'] * $item['quantity'], 2) }}€</td>
+                                            <td class="px-6 py-4 text-white font-bold"><?php echo e(number_format($item['price'] * $item['quantity'], 2)); ?>€</td>
                                             <td class="px-6 py-4">
-                                                <form action="{{ route('cart.remove', $id) }}" method="POST">
-                                                    @csrf
+                                                <form action="<?php echo e(route('cart.remove', $id)); ?>" method="POST">
+                                                    <?php echo csrf_field(); ?>
                                                     <button type="submit" class="text-neon-red hover:text-neon-red/80 transition" title="Eliminar">
                                                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -80,7 +89,7 @@
                                                 </form>
                                             </td>
                                         </tr>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </tbody>
                             </table>
                         </div>
@@ -94,7 +103,7 @@
                             <div class="space-y-4">
                                 <div class="flex justify-between text-gray-300">
                                     <span>Subtotal:</span>
-                                    <span>{{ number_format($total, 2) }}€</span>
+                                    <span><?php echo e(number_format($total, 2)); ?>€</span>
                                 </div>
                                 <div class="flex justify-between text-gray-300">
                                     <span>Envío:</span>
@@ -103,38 +112,48 @@
                                 <div class="border-t border-gray-800 my-4"></div>
                                 <div class="flex justify-between text-xl font-bold text-white">
                                     <span>Total:</span>
-                                    <span class="text-neon-blue">{{ number_format($total, 2) }}€</span>
+                                    <span class="text-neon-blue"><?php echo e(number_format($total, 2)); ?>€</span>
                                 </div>
                             </div>
 
-                            @auth
-                                <a href="{{ route('cart.checkout.form') }}" 
+                            <?php if(auth()->guard()->check()): ?>
+                                <a href="<?php echo e(route('cart.checkout.form')); ?>" 
                                    class="block w-full mt-6 px-6 py-3 bg-neon-blue text-gamer-dark font-bold rounded-lg hover:scale-105 transition text-center shadow-[0_0_20px_rgba(0,210,255,0.4)]">
                                     ✅ Proceder al pago
                                 </a>
-                            @else
+                            <?php else: ?>
                                 <div class="mt-6 bg-gray-800/50 border border-neon-red/30 rounded-lg p-4 text-center">
                                     <p class="text-gray-300 mb-3">🔒 Debes iniciar sesión para comprar</p>
                                     <div class="flex gap-3">
-                                        <a href="{{ route('login') }}" class="flex-1 px-4 py-2 bg-neon-blue text-gamer-dark font-bold rounded-lg hover:scale-105 transition">
+                                        <a href="<?php echo e(route('login')); ?>" class="flex-1 px-4 py-2 bg-neon-blue text-gamer-dark font-bold rounded-lg hover:scale-105 transition">
                                             Iniciar sesión
                                         </a>
-                                        <a href="{{ route('register') }}" class="flex-1 px-4 py-2 bg-neon-purple text-white font-bold rounded-lg hover:scale-105 transition">
+                                        <a href="<?php echo e(route('register')); ?>" class="flex-1 px-4 py-2 bg-neon-purple text-white font-bold rounded-lg hover:scale-105 transition">
                                             Registrarse
                                         </a>
                                     </div>
                                 </div>
-                            @endauth
+                            <?php endif; ?>
 
                             <div class="mt-4 text-center">
-                                <a href="{{ route('products.index') }}" class="text-sm text-gray-400 hover:text-neon-blue transition">
+                                <a href="<?php echo e(route('products.index')); ?>" class="text-sm text-gray-400 hover:text-neon-blue transition">
                                     ← Seguir comprando
                                 </a>
                             </div>
                         </div>
                     </div>
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
     </div>
-</x-store-layout>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalfa92fd5562a0c82e62f2e625d459a2d3)): ?>
+<?php $attributes = $__attributesOriginalfa92fd5562a0c82e62f2e625d459a2d3; ?>
+<?php unset($__attributesOriginalfa92fd5562a0c82e62f2e625d459a2d3); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalfa92fd5562a0c82e62f2e625d459a2d3)): ?>
+<?php $component = $__componentOriginalfa92fd5562a0c82e62f2e625d459a2d3; ?>
+<?php unset($__componentOriginalfa92fd5562a0c82e62f2e625d459a2d3); ?>
+<?php endif; ?>
+<?php /**PATH /home/ctk/Documentos/Proyecto_Daniel/Proyecto-final-main/laravel_shop/resources/views/cart/index.blade.php ENDPATH**/ ?>
