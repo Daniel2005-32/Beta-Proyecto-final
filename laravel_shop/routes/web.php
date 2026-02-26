@@ -25,12 +25,18 @@ Route::prefix('products')->name('products.')->group(function () {
     Route::get('/{slug}', [ProductController::class, 'show'])->name('show');
 });
 
-// Admin routes
+// Admin routes - Productos
 Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::resource('products', App\Http\Controllers\Admin\ProductController::class);
 });
 
-// Chat routes (API)
+// Admin routes - Usuarios (NUEVAS)
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+    Route::resource('users', App\Http\Controllers\Admin\UserController::class);
+    Route::post('users/{user}/toggle-admin', [App\Http\Controllers\Admin\UserController::class, 'toggleAdmin'])->name('users.toggle-admin');
+});
+
+// Chat routes
 Route::prefix('chat')->name('chat.')->group(function () {
     Route::get('/refresh', [ChatController::class, 'refresh'])->name('refresh');
     Route::post('/', [ChatController::class, 'store'])->name('store')->middleware('auth');

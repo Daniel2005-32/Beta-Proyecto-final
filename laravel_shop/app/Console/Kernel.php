@@ -15,8 +15,8 @@ class Kernel extends ConsoleKernel
         // Ejecutar cada hora para eliminar mensajes de más de 1 hora
         $schedule->command('messages:delete-old --hours=1')->hourly();
         
-        // También puedes mantener los mensajes por más tiempo:
-        // $schedule->command('messages:delete-old --hours=24')->daily();
+        // También puedes mantener un registro de ejecución
+        $schedule->command('messages:delete-old --hours=1')->everyMinute(); // Para pruebas (cambiar después)
     }
 
     /**

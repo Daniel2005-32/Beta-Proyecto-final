@@ -63,11 +63,16 @@
                                         <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                                     </svg>
                                 </button>
-                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-gamer-card border border-gray-700 rounded-md shadow-xl py-1 z-50">
+                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-56 bg-gamer-card border border-gray-700 rounded-md shadow-xl py-1 z-50">
                                     <a href="{{ route('profile.index') }}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-blue">👤 Mi Perfil</a>
+                                    
                                     @if(Auth::user()->is_admin)
-                                        <a href="{{ route('admin.products.index') }}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-blue">👑 Panel Admin</a>
+                                        <div class="border-t border-gray-800 my-1"></div>
+                                        <div class="px-4 py-1 text-xs text-gray-500 uppercase tracking-wider">Administración</div>
+                                        <a href="{{ route('admin.products.index') }}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-blue">📦 Productos</a>
+                                        <a href="{{ route('admin.users.index') }}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-blue">👥 Usuarios</a>
                                     @endif
+                                    
                                     <div class="border-t border-gray-800 my-1"></div>
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
