@@ -36,7 +36,7 @@
                         </a>
                     </div>
 
-                    <!-- Menú con categorías (SIEMPRE VISIBLE) -->
+                    <!-- Menú con categorías y SORTEOS -->
                     <nav class="hidden md:flex space-x-6 items-center">
                         <a href="<?php echo e(route('products.category', 'consolas')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->is('products/category/consolas') ? 'text-neon-blue' : ''); ?>">Consolas</a>
                         <a href="<?php echo e(route('products.category', 'videojuegos')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->is('products/category/videojuegos') ? 'text-neon-blue' : ''); ?>">Videojuegos</a>
@@ -44,6 +44,7 @@
                         <a href="<?php echo e(route('products.category', 'productos-anime')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->is('products/category/productos-anime') ? 'text-neon-blue' : ''); ?>">Productos Anime</a>
                         <a href="<?php echo e(route('products.category', 'cosplay')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->is('products/category/cosplay') ? 'text-neon-blue' : ''); ?>">Cosplay</a>
                         <a href="<?php echo e(route('offers')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->routeIs('offers') ? 'text-neon-blue' : ''); ?>">Ofertas</a>
+                        <a href="<?php echo e(route('raffles.index')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->routeIs('raffles.*') ? 'text-neon-purple' : ''); ?>">Sorteos</a>
                     </nav>
 
                     <!-- Acciones -->
@@ -54,7 +55,7 @@
                                 $ban = Auth::user()->activeBan();
                             ?>
                             
-                            <!-- Carrito (visible pero deshabilitado si está baneado) -->
+                            <!-- Carrito -->
                             <?php if($isBanned): ?>
                                 <div class="relative p-2 text-gray-500 cursor-not-allowed" title="No puedes comprar mientras estás baneado">
                                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
@@ -87,12 +88,13 @@
                                 <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-56 bg-gamer-card border border-gray-700 rounded-md shadow-xl py-1 z-50">
                                     <a href="<?php echo e(route('profile.index')); ?>" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-blue">👤 Mi Perfil</a>
                                     
-                                    <?php if(Auth::user()->is_admin): ?>
+                                    <?php if(Auth::user()->is_admin && !$isBanned): ?>
                                         <div class="border-t border-gray-800 my-1"></div>
                                         <div class="px-4 py-1 text-xs text-gray-500 uppercase tracking-wider">Administración</div>
                                         <a href="<?php echo e(route('admin.products.index')); ?>" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-blue">📦 Productos</a>
                                         <a href="<?php echo e(route('admin.users.index')); ?>" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-blue">👥 Usuarios</a>
                                         <a href="<?php echo e(route('admin.bans.index')); ?>" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-blue">🚫 Baneos</a>
+                                        <a href="<?php echo e(route('admin.raffles.index')); ?>" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-blue">🎲 Sorteos</a>
                                     <?php endif; ?>
                                     
                                     <div class="border-t border-gray-800 my-1"></div>
@@ -113,7 +115,7 @@
             </div>
         </header>
 
-        <!-- Banner de baneo (si está baneado) -->
+        <!-- Banner de baneo -->
         <?php if(auth()->guard()->check()): ?>
             <?php
                 $ban = Auth::user()->activeBan();
@@ -195,7 +197,7 @@
         </footer>
     </div>
 
-    <!-- CHAT FLOTANTE (solo para no baneados) -->
+    <!-- CHAT FLOTANTE -->
     <?php if(auth()->guard()->check()): ?>
         <?php if(!Auth::user()->isBanned()): ?>
             <?php echo $__env->make('components.floating-chat', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>

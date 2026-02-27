@@ -7,6 +7,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AddressController;
+use App\Http\Controllers\RaffleController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -49,6 +50,14 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('bans/unban/{user}', [App\Http\Controllers\Admin\BanController::class, 'unban'])->name('bans.unban');
 });
 
+// Admin routes - Sorteos
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+    Route::resource('raffles', App\Http\Controllers\Admin\RaffleController::class);
+    // Rutas adicionales para sorteos con nombres CORRECTOS
+    Route::post('raffles/{raffle}/activate', [App\Http\Controllers\Admin\RaffleController::class, 'activate'])->name('raffles.activate');
+    Route::post('raffles/{raffle}/draw', [App\Http\Controllers\Admin\RaffleController::class, 'drawWinner'])->name('raffles.draw');
+});
+
 // Ruta para limpiar mensajes manualmente (solo admins)
 Route::get('/admin/clean-messages', function() {
     if (!auth()->check() || !auth()->user()->is_admin) {
@@ -75,6 +84,14 @@ Route::prefix('auctions')->name('auctions.')->group(function () {
     Route::post('/{id}/reduce', [AuctionController::class, 'reduceAuction'])->name('reduce')->middleware('auth');
     Route::post('/{id}/reset', [AuctionController::class, 'resetAuctionTime'])->name('reset')->middleware('auth');
     Route::post('/{id}/force-end', [AuctionController::class, 'forceEndAuction'])->name('force-end')->middleware('auth');
+});
+
+// ============================================
+// RUTAS DE SORTEOS (PÚBLICAS)
+// ============================================
+Route::prefix('raffles')->name('raffles.')->group(function () {
+    Route::get('/', [RaffleController::class, 'index'])->name('index');
+    Route::get('/{id}', [RaffleController::class, 'show'])->name('show');
 });
 
 // ============================================
