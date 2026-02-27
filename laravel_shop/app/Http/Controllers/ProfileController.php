@@ -2,59 +2,98 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Http\RedirectResponse;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\View\View;
+use Illuminate\Support\Facades\Hash;
 
 class ProfileController extends Controller
 {
     /**
-     * Display the user's profile form.
+     * Mostrar el perfil del usuario
      */
-    public function edit(Request $request): View
+    public function index()
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
-        ]);
+        $user = Auth::user();
+        return view('profile.index', compact('user'));
     }
 
     /**
-     * Update the user's profile information.
+     * Mostrar formulario de edición
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function edit()
     {
-        $request->user()->fill($request->validated());
+        $user = Auth::user();
+        return view('profile.edit', compact('user'));
+    }
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+    /**
+     * Actualizar perfil
+     */
+    public function update(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+        ]);
+
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email,
+        ]);
+
+        return redirect()->route('profile.index')->with('success', 'Perfil actualizado correctamente');
+    }
+
+    /**
+     * Cambiar contraseña
+     */
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:8|confirmed',
+        ]);
+
+        $user = Auth::user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->with('error', 'La contraseña actual no es correcta');
         }
 
-        $request->user()->save();
+        $user->update([
+            'password' => Hash::make($request->new_password)
+        ]);
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        return redirect()->route('profile.index')->with('success', 'Contraseña cambiada correctamente');
     }
 
     /**
-     * Delete the user's account.
+     * Subir avatar
      */
-    public function destroy(Request $request): RedirectResponse
+    public function uploadAvatar(Request $request)
     {
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $user = $request->user();
+        $user = Auth::user();
+        
+        if ($request->hasFile('avatar')) {
+            $avatarName = time() . '.' . $request->avatar->extension();
+            $request->avatar->move(public_path('avatars'), $avatarName);
+            
+            // Eliminar avatar anterior si existe
+            if ($user->avatar && file_exists(public_path('avatars/' . $user->avatar))) {
+                unlink(public_path('avatars/' . $user->avatar));
+            }
+            
+            $user->avatar = $avatarName;
+            $user->save();
+        }
 
-        Auth::logout();
-
-        $user->delete();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return Redirect::to('/');
+        return redirect()->route('profile.index')->with('success', 'Avatar actualizado correctamente');
     }
 }

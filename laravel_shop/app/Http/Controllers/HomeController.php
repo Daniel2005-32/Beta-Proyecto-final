@@ -9,9 +9,29 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $featured = Product::where('is_featured', true)->take(4)->get();
-        $trending = Product::where('is_trend', true)->take(4)->get();
-        $exclusive = Product::where('is_exclusive', true)->take(4)->get();
+        // Productos destacados (excluyendo los que están en subasta)
+        $featured = Product::where('featured', true)
+            ->where('stock', '>', 0)
+            ->where('is_in_auction', false)
+            ->inRandomOrder()
+            ->take(4)
+            ->get();
+            
+        // Productos en tendencia (excluyendo los que están en subasta)
+        $trending = Product::where('trending', true)
+            ->where('stock', '>', 0)
+            ->where('is_in_auction', false)
+            ->inRandomOrder()
+            ->take(4)
+            ->get();
+        
+        // Productos exclusivos (excluyendo los que están en subasta)
+        $exclusive = Product::where('is_exclusive', true)
+            ->where('stock', '>', 0)
+            ->where('is_in_auction', false)
+            ->inRandomOrder()
+            ->take(4)
+            ->get();
         
         return view('home', compact('featured', 'trending', 'exclusive'));
     }

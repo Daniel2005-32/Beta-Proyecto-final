@@ -11,12 +11,17 @@ return new class extends Migration
         Schema::create('auctions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            $table->decimal('start_price', 10, 2);
+            $table->decimal('starting_price', 10, 2);
             $table->decimal('current_price', 10, 2);
+            $table->decimal('min_bid', 10, 2)->default(1.00);
+            $table->timestamp('start_time');
             $table->timestamp('end_time');
+            $table->foreignId('current_winner_id')->nullable()->constrained('users');
+            $table->integer('total_bids')->default(0);
             $table->enum('status', ['active', 'ended', 'cancelled'])->default('active');
-            $table->foreignId('winner_id')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
+            
+            $table->index(['status', 'end_time']);
         });
     }
 

@@ -2,123 +2,230 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Auction;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
-use App\Models\Raffle;
-use App\Models\RaffleEntry;
+use App\Models\Address;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
+    /**
+     * Verificar si el usuario está baneado
+     */
+    private function checkBanned()
+    {
+        if (Auth::check() && Auth::user()->isBanned()) {
+            return redirect()->back()->with('error', 'No puedes realizar esta acción mientras estás baneado.');
+        }
+        return null;
+    }
+
     public function addToCart(Request $request, $id)
     {
+        $check = $this->checkBanned();
+        if ($check) return $check;
+
         $product = Product::findOrFail($id);
-        $cart = session()->get('cart', []);
         
-        if(isset($cart[$id])) {
-            $cart[$id]['quantity']++;
+        if (!$product->inStock()) {
+            return redirect()->back()->with('error', 'Producto sin stock');
+        }
+
+        $cart = Session::get('cart', []);
+        
+        if (isset($cart[$id])) {
+            if ($product->stock > $cart[$id]['quantity']) {
+                $cart[$id]['quantity']++;
+            } else {
+                return redirect()->back()->with('error', 'Stock insuficiente (máximo ' . $product->stock . ' unidades)');
+            }
         } else {
             $cart[$id] = [
-                "name" => $product->name,
-                "quantity" => 1,
-                "price" => $product->price,
-                "image" => $product->image
+                'name' => $product->name,
+                'price' => $product->price,
+                'quantity' => 1,
+                'image' => $product->image,
+                'slug' => $product->slug
             ];
         }
         
-        session()->put('cart', $cart);
-        return redirect()->back()->with('success', 'Product added to cart successfully!');
+        Session::put('cart', $cart);
+        return redirect()->back()->with('success', 'Producto añadido al carrito');
     }
 
     public function viewCart()
     {
-        return view('cart.index');
+        $check = $this->checkBanned();
+        if ($check) return $check;
+
+        $cart = Session::get('cart', []);
+        $total = array_sum(array_map(function($item) {
+            return $item['price'] * $item['quantity'];
+        }, $cart));
+        
+        return view('cart.index', compact('cart', 'total'));
+    }
+
+    public function updateCart(Request $request, $id)
+    {
+        $check = $this->checkBanned();
+        if ($check) return $check;
+
+        $cart = Session::get('cart', []);
+        
+        if (isset($cart[$id])) {
+            $product = Product::find($id);
+            
+            if ($product && $product->stock >= $request->quantity) {
+                $cart[$id]['quantity'] = $request->quantity;
+                Session::put('cart', $cart);
+                
+                $total = array_sum(array_map(function($item) {
+                    return $item['price'] * $item['quantity'];
+                }, $cart));
+                
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'subtotal' => number_format($total, 2),
+                        'total' => number_format($total, 2)
+                    ]);
+                }
+                
+                return redirect()->route('cart.index')->with('success', 'Carrito actualizado');
+            } else {
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Stock insuficiente'
+                    ], 400);
+                }
+                return redirect()->route('cart.index')->with('error', 'Stock insuficiente. Máximo ' . ($product ? $product->stock : 0) . ' unidades');
+            }
+        }
+        
+        return redirect()->route('cart.index')->with('error', 'Producto no encontrado en el carrito');
+    }
+
+    public function removeFromCart($id)
+    {
+        $check = $this->checkBanned();
+        if ($check) return $check;
+
+        $cart = Session::get('cart', []);
+        
+        if (isset($cart[$id])) {
+            unset($cart[$id]);
+            Session::put('cart', $cart);
+        }
+        
+        return redirect()->route('cart.index')->with('success', 'Producto eliminado del carrito');
+    }
+
+    public function clearCart()
+    {
+        $check = $this->checkBanned();
+        if ($check) return $check;
+
+        Session::forget('cart');
+        return redirect()->route('cart.index')->with('success', 'Carrito vaciado correctamente');
+    }
+
+    public function checkoutForm()
+    {
+        $check = $this->checkBanned();
+        if ($check) return $check;
+
+        if (!auth()->check()) {
+            return redirect()->route('login');
+        }
+
+        $cart = Session::get('cart', []);
+        if (empty($cart)) {
+            return redirect()->route('cart.index')->with('error', 'El carrito está vacío');
+        }
+
+        $addresses = Address::where('user_id', auth()->id())->get();
+        $total = array_sum(array_map(function($item) {
+            return $item['price'] * $item['quantity'];
+        }, $cart));
+
+        return view('cart.checkout', compact('cart', 'total', 'addresses'));
     }
 
     public function checkout(Request $request)
     {
-        if(!Auth::check()){
+        $check = $this->checkBanned();
+        if ($check) return $check;
+
+        $cart = Session::get('cart', []);
+        
+        if (empty($cart)) {
+            return redirect()->route('cart.index')->with('error', 'El carrito está vacío');
+        }
+
+        if (!auth()->check()) {
             return redirect()->route('login');
         }
 
-        $cart = session('cart');
-        if(!$cart) return redirect()->route('cart.index');
+        $request->validate([
+            'address_id' => 'required|exists:addresses,id'
+        ]);
 
-        DB::beginTransaction();
-        try {
-            $total = 0;
-            foreach($cart as $id => $details){
-                $total += $details['price'] * $details['quantity'];
+        $address = Address::find($request->address_id);
+        if ($address->user_id != auth()->id()) {
+            abort(403);
+        }
+
+        foreach ($cart as $productId => $item) {
+            $product = Product::find($productId);
+            if (!$product) {
+                return redirect()->route('cart.index')->with('error', 'Producto no encontrado');
             }
+            if ($product->stock < $item['quantity']) {
+                return redirect()->route('cart.index')->with('error', 
+                    "Stock insuficiente para {$item['name']}. Disponible: {$product->stock}, solicitado: {$item['quantity']}");
+            }
+        }
 
-            $order = Order::create([
-                'user_id' => Auth::id(),
-                'status' => 'paid', // Mocking payment
-                'total' => $total,
-                'shipping_address' => 'Test Address' // Simplified
+        $total = array_sum(array_map(function($item) {
+            return $item['price'] * $item['quantity'];
+        }, $cart));
+
+        $order = Order::create([
+            'user_id' => auth()->id(),
+            'address_id' => $request->address_id,
+            'total' => $total,
+            'status' => 'pending'
+        ]);
+
+        foreach ($cart as $productId => $item) {
+            $product = Product::find($productId);
+            
+            OrderItem::create([
+                'order_id' => $order->id,
+                'product_id' => $productId,
+                'quantity' => $item['quantity'],
+                'price' => $item['price']
             ]);
 
-            foreach($cart as $id => $details){
-                $product = Product::lockForUpdate()->find($id);
-                
-                if($product->stock < $details['quantity']){
-                    throw new \Exception("Not enough stock for " . $product->name);
-                }
-
-                $product->decrement('stock', $details['quantity']);
-
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $id,
-                    'quantity' => $details['quantity'],
-                    'price' => $details['price']
-                ]);
-
-                // Auction Trigger: Exclusive + Stock becomes 1
-                if($product->is_exclusive && $product->stock == 1){
-                    if(!$product->auction){
-                        Auction::create([
-                            'product_id' => $product->id,
-                            'start_price' => $product->price,
-                            'current_price' => $product->price,
-                            'end_time' => now()->addDays(7),
-                            'status' => 'active'
-                        ]);
-                    }
-                }
-            }
-
-            // Raffle Entry Trigger: Total >= 20
-            if($total >= 20){
-                $raffle = Raffle::firstOrCreate(
-                    [
-                        'title' => 'Sorteo Mensual ' . now()->format('F Y'),
-                        'status' => 'pending'
-                    ],
-                    [
-                        'description' => 'Sorteo automático por compras superiores a 20€',
-                        'draw_date' => now()->endOfMonth()
-                    ]
-                );
-
-                RaffleEntry::create([
-                    'raffle_id' => $raffle->id,
-                    'user_id' => Auth::id(),
-                    'order_id' => $order->id
-                ]);
-            }
-
-            DB::commit();
-            session()->forget('cart');
-            return redirect()->route('home')->with('success', 'Order placed successfully!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->with('error', 'Error processing order: ' . $e->getMessage());
+            $product->decreaseStock($item['quantity']);
         }
+
+        Session::forget('cart');
+        
+        return redirect()->route('orders.show', $order)->with('success', 'Pedido realizado correctamente');
+    }
+
+    public function show(Order $order)
+    {
+        if (auth()->id() !== $order->user_id) {
+            abort(403, 'No tienes permiso para ver este pedido');
+        }
+        
+        return view('orders.show', compact('order'));
     }
 }

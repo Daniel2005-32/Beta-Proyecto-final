@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PRUEBA FINAL</title>
+</head>
+<body>
+    <h1 style="color: red; font-size: 48px;">SI VES ESTO, LARAVEL SIRVE HTML</h1>
+    <div id="root"></div>
+    
+    <!-- Cargar React directamente desde CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <script>
+        // React directamente en el HTML
+        const App = () => {
+            return React.createElement('div', { 
+                style: { 
+                    backgroundColor: '#0b0e14',
+                    color: '#00d2ff',
+                    padding: '20px',
+                    marginTop: '20px',
+                    fontSize: '24px'
+                }
+            }, '🎮 SI VES ESTO, REACT FUNCIONA DESDE CDN 🎮');
+        };
+        
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(App));
+    </script>
+</body>
+</html>

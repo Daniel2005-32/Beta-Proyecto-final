@@ -10,12 +10,16 @@ class Auction extends Model
     use HasFactory;
 
     protected $fillable = [
-        'product_id', 'start_price', 'current_price', 'end_time', 
-        'status', 'winner_id'
+        'product_id', 'starting_price', 'current_price', 'min_bid',
+        'start_time', 'end_time', 'current_winner_id', 'total_bids', 'status'
     ];
 
     protected $casts = [
+        'start_time' => 'datetime',
         'end_time' => 'datetime',
+        'starting_price' => 'decimal:2',
+        'current_price' => 'decimal:2',
+        'min_bid' => 'decimal:2'
     ];
 
     public function product()
@@ -28,8 +32,8 @@ class Auction extends Model
         return $this->hasMany(Bid::class);
     }
 
-    public function winner()
+    public function currentWinner()
     {
-        return $this->belongsTo(User::class, 'winner_id');
+        return $this->belongsTo(User::class, 'current_winner_id');
     }
 }

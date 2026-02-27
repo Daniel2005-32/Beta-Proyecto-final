@@ -2,42 +2,235 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Auction;
-use App\Models\Bid;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class AuctionController extends Controller
 {
     public function index()
     {
-        $auctions = Auction::where('status', 'active')->with('product')->get();
-        return view('auctions.index', compact('auctions'));
+        // Finalizar subastas que han terminado
+        $endedAuctions = Product::where('is_in_auction', true)
+            ->where('auction_cancelled', false)
+            ->where('auction_end_time', '<=', Carbon::now())
+            ->get();
+            
+        foreach ($endedAuctions as $auction) {
+            $auction->endAuctionAndRemoveFromCatalog();
+        }
+        
+        $activeAuctions = Product::with('category', 'auctionWinner')
+            ->where('is_in_auction', true)
+            ->where('auction_cancelled', false)
+            ->where('auction_end_time', '>', Carbon::now())
+            ->orderBy('auction_end_time')
+            ->paginate(12);
+        
+        return view('auctions.index', compact('activeAuctions'));
     }
 
     public function show($id)
     {
-        $auction = Auction::with(['product', 'bids.user'])->findOrFail($id);
-        return view('auctions.show', compact('auction'));
+        $product = Product::with('category', 'auctionWinner')->findOrFail($id);
+        
+        if (!$product->isAuctionActive() && !$product->isAuctionEnded()) {
+            return redirect()->route('home')->with('error', 'Esta subasta no está activa');
+        }
+        
+        return view('auctions.show', compact('product'));
     }
 
-    public function placeBid(Request $request, $id)
+    public function confirm($id)
     {
-        $auction = Auction::findOrFail($id);
-        $amount = $request->input('amount');
-
-        if($amount <= $auction->current_price){
-            return back()->with('error', 'Bid must be higher than current price.');
+        $product = Product::findOrFail($id);
+        
+        if (!$product->is_exclusive || $product->stock != 1) {
+            return redirect()->route('products.show', $product->slug)
+                ->with('error', 'Este producto no está disponible para subasta');
         }
+        
+        return view('auctions.confirm', compact('product'));
+    }
 
-        Bid::create([
-            'auction_id' => $auction->id,
-            'user_id' => Auth::id(),
-            'amount' => $amount
+    public function bid(Request $request, $id)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01'
         ]);
 
-        $auction->update(['current_price' => $amount, 'winner_id' => Auth::id()]);
+        $product = Product::findOrFail($id);
+        
+        if (!$product->isAuctionActive()) {
+            return back()->with('error', 'Esta subasta ya ha finalizado o no está activa');
+        }
+        
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Debes iniciar sesión para pujar');
+        }
+        
+        $currentBid = $product->price;
+        
+        if ($request->amount <= $currentBid) {
+            return back()->with('error', "La puja debe ser mayor a " . number_format($currentBid, 2) . "€");
+        }
+        
+        // Actualizar el precio y el ganador
+        $product->price = $request->amount;
+        $product->auction_winner_id = Auth::id();
+        $product->save();
+        
+        return back()->with('success', '¡Puja realizada correctamente! Ahora eres el mejor postor');
+    }
 
-        return back()->with('success', 'Bid placed successfully!');
+    public function start(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+        
+        if (!$product->is_exclusive || $product->stock != 1) {
+            return redirect()->route('home')->with('error', 'Este producto no puede iniciar subasta');
+        }
+        
+        $product->startAuction();
+        
+        return redirect()->route('auctions.show', $product->id)
+            ->with('success', '¡Subasta iniciada! 24 horas para pujar');
+    }
+
+    public function cancel(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+        
+        $product->cancelAuction();
+        
+        return redirect()->route('home')
+            ->with('info', 'Subasta cancelada');
+    }
+
+    public function claimPrize($id)
+    {
+        $product = Product::findOrFail($id);
+        
+        if (!Auth::check() || Auth::id() != $product->auction_winner_id) {
+            return redirect()->route('home')->with('error', 'No eres el ganador de esta subasta');
+        }
+        
+        if ($product->auction_claimed) {
+            return redirect()->route('profile.index')->with('info', 'Ya has reclamado este premio');
+        }
+        
+        // Marcar como reclamado
+        $product->auction_claimed = true;
+        $product->save();
+        
+        return redirect()->route('profile.index')->with('success', '¡Premio reclamado correctamente!');
+    }
+
+    // ============================================
+    // MÉTODOS PARA ADMINISTRADORES (CORREGIDOS)
+    // ============================================
+    
+    public function extendAuction(Request $request, $id)
+    {
+        // Verificar que es admin
+        if (!auth()->check() || !auth()->user()->is_admin) {
+            abort(403, 'Acceso no autorizado');
+        }
+        
+        $request->validate([
+            'hours' => 'required|integer|min:1|max:72'
+        ]);
+        
+        $product = Product::findOrFail($id);
+        
+        if (!$product->is_in_auction) {
+            return back()->with('error', 'Este producto no está en subasta');
+        }
+        
+        // Convertir a entero explícitamente
+        $hours = (int) $request->hours;
+        
+        // Extender el tiempo
+        $newEndTime = Carbon::parse($product->auction_end_time)->addHours($hours);
+        $product->auction_end_time = $newEndTime;
+        $product->save();
+        
+        return redirect()->back()->with('success', "✅ Subasta extendida {$hours} horas");
+    }
+    
+    public function reduceAuction(Request $request, $id)
+    {
+        // Verificar que es admin
+        if (!auth()->check() || !auth()->user()->is_admin) {
+            abort(403, 'Acceso no autorizado');
+        }
+        
+        $request->validate([
+            'hours' => 'required|integer|min:1|max:24'
+        ]);
+        
+        $product = Product::findOrFail($id);
+        
+        if (!$product->is_in_auction) {
+            return back()->with('error', 'Este producto no está en subasta');
+        }
+        
+        // Convertir a entero explícitamente
+        $hours = (int) $request->hours;
+        
+        // Reducir el tiempo
+        $newEndTime = Carbon::parse($product->auction_end_time)->subHours($hours);
+        
+        // No permitir reducir por debajo del tiempo actual
+        if ($newEndTime < Carbon::now()) {
+            return back()->with('error', '❌ No puedes reducir la subasta por debajo del tiempo actual');
+        }
+        
+        $product->auction_end_time = $newEndTime;
+        $product->save();
+        
+        return redirect()->back()->with('success', "✅ Subasta reducida {$hours} horas");
+    }
+    
+    public function resetAuctionTime(Request $request, $id)
+    {
+        // Verificar que es admin
+        if (!auth()->check() || !auth()->user()->is_admin) {
+            abort(403, 'Acceso no autorizado');
+        }
+        
+        $product = Product::findOrFail($id);
+        
+        if (!$product->is_in_auction) {
+            return back()->with('error', 'Este producto no está en subasta');
+        }
+        
+        // Resetear a 24 horas desde ahora
+        $product->auction_end_time = Carbon::now()->addHours(24);
+        $product->save();
+        
+        return back()->with('success', '✅ Subasta reiniciada a 24 horas');
+    }
+    
+    public function forceEndAuction($id)
+    {
+        // Verificar que es admin
+        if (!auth()->check() || !auth()->user()->is_admin) {
+            abort(403, 'Acceso no autorizado');
+        }
+        
+        $product = Product::findOrFail($id);
+        
+        if (!$product->is_in_auction) {
+            return back()->with('error', 'Este producto no está en subasta');
+        }
+        
+        $product->auction_end_time = Carbon::now();
+        $product->save();
+        $product->endAuctionAndRemoveFromCatalog();
+        
+        return back()->with('success', '✅ Subasta finalizada forzosamente');
     }
 }
+

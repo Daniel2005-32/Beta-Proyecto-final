@@ -17,11 +17,11 @@
     <style>
         .neon-text-blue { text-shadow: 0 0 5px #00d2ff, 0 0 10px #00d2ff; }
         .neon-text-purple { text-shadow: 0 0 5px #9d00ff, 0 0 10px #9d00ff; }
-        .neon-border-blue { box-shadow: 0 0 5px #00d2ff, inset 0 0 5px #00d2ff; }
-        .nav-link-hover:hover {
-            color: #00d2ff;
-            text-shadow: 0 0 8px #00d2ff;
-            transform: translateY(-2px);
+        .neon-text-red { text-shadow: 0 0 5px #ff0055, 0 0 10px #ff0055; }
+        
+        /* Transiciones suaves para las imágenes */
+        .fade-image {
+            transition: opacity 2s ease-in-out;
         }
     </style>
 </head>
@@ -41,96 +41,243 @@
                         </a>
                     </div>
 
-                    <!-- Navegación -->
+                    <!-- Menú con categorías -->
                     <nav class="hidden md:flex space-x-6 items-center">
-                        <a href="{{ route('products.index', ['category' => 'videojuegos']) }}" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover">Videojuegos</a>
-                        <a href="{{ route('products.index', ['category' => 'manga']) }}" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover">Manga</a>
-                        <a href="{{ route('products.index', ['category' => 'figuras']) }}" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover">Figuras de Anime</a>
-                        <a href="{{ route('products.index', ['category' => 'productos-anime']) }}" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover">Productos de Anime</a>
-                        <a href="{{ route('products.index', ['category' => 'cosplay']) }}" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover">Cosplay</a>
+                        <a href="{{ route('products.category', 'consolas') }}" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover {{ request()->is('products/category/consolas') ? 'text-neon-blue' : '' }}">Consolas</a>
+                        <a href="{{ route('products.category', 'videojuegos') }}" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover {{ request()->is('products/category/videojuegos') ? 'text-neon-blue' : '' }}">Videojuegos</a>
+                        <a href="{{ route('products.category', 'manga') }}" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover {{ request()->is('products/category/manga') ? 'text-neon-blue' : '' }}">Manga</a>
+                        <a href="{{ route('products.category', 'productos-anime') }}" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover {{ request()->is('products/category/productos-anime') ? 'text-neon-blue' : '' }}">Productos Anime</a>
+                        <a href="{{ route('products.category', 'cosplay') }}" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover {{ request()->is('products/category/cosplay') ? 'text-neon-blue' : '' }}">Cosplay</a>
+                        <a href="{{ route('offers') }}" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover {{ request()->routeIs('offers') ? 'text-neon-blue' : '' }}">Ofertas</a>
+                        <a href="{{ route('raffles.index') }}" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover {{ request()->routeIs('raffles.*') ? 'text-neon-purple' : '' }}">Sorteos</a>
                     </nav>
 
-                    <!-- Acciones Derecha -->
+                    <!-- Acciones -->
                     <div class="flex items-center space-x-4">
-                        <a href="{{ route('cart.index') }}" class="relative p-2 text-gray-400 hover:text-neon-blue transition">
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                            @if(session('cart'))
-                                <span class="absolute top-0 right-0 bg-neon-red text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-[0_0_10px_#ff0055]">
-                                    {{ count(session('cart')) }}
-                                </span>
+                        @auth
+                            @php
+                                $isBanned = Auth::user()->isBanned();
+                                $ban = Auth::user()->activeBan();
+                            @endphp
+                            
+                            <!-- Carrito -->
+                            @if($isBanned)
+                                <div class="relative p-2 text-gray-500 cursor-not-allowed" title="No puedes comprar mientras estás baneado">
+                                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                    @if(session('cart'))
+                                        <span class="absolute top-0 right-0 bg-neon-red text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{{ count(session('cart')) }}</span>
+                                    @endif
+                                </div>
+                            @else
+                                <a href="{{ route('cart.index') }}" class="relative p-2 text-gray-400 hover:text-neon-blue transition">
+                                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                    @if(session('cart'))
+                                        <span class="absolute top-0 right-0 bg-neon-red text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{{ count(session('cart')) }}</span>
+                                    @endif
+                                </a>
                             @endif
-                        </a>
+                        @endauth
 
                         @auth
                             <div class="relative" x-data="{ open: false }">
                                 <button @click="open = !open" class="flex items-center text-sm font-bold text-gray-300 hover:text-white transition">
                                     {{ Auth::user()->name }}
-                                    <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                    @if($isBanned)
+                                        <span class="ml-2 px-2 py-1 bg-neon-red/20 text-neon-red text-xs rounded-full">BANEADO</span>
+                                    @endif
+                                    <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                    </svg>
                                 </button>
-                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-gamer-card border border-gray-700 rounded-md shadow-xl py-1 z-50">
-                                    <a href="{{ route('dashboard') }}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-blue">Panel de Control</a>
+                                <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-56 bg-gamer-card border border-gray-700 rounded-md shadow-xl py-1 z-50">
+                                    <a href="{{ route('profile.index') }}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-blue">👤 Mi Perfil</a>
+                                    
+                                    @if(Auth::user()->is_admin && !$isBanned)
+                                        <div class="border-t border-gray-800 my-1"></div>
+                                        <div class="px-4 py-1 text-xs text-gray-500 uppercase tracking-wider">Administración</div>
+                                        <a href="{{ route('admin.products.index') }}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-blue">📦 Productos</a>
+                                        <a href="{{ route('admin.users.index') }}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-blue">👥 Usuarios</a>
+                                        <a href="{{ route('admin.bans.index') }}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-blue">🚫 Baneos</a>
+                                        <a href="{{ route('admin.raffles.index') }}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-blue">🎲 Sorteos</a>
+                                    @endif
+                                    
+                                    <div class="border-t border-gray-800 my-1"></div>
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
-                                        <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-red">Cerrar Sesión</button>
+                                        <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-neon-red">
+                                            Cerrar sesión
+                                        </button>
                                     </form>
                                 </div>
                             </div>
                         @else
                             <a href="{{ route('login') }}" class="text-sm font-bold text-gray-400 hover:text-neon-blue transition">Entrar</a>
-                            <a href="{{ route('register') }}" class="px-4 py-2 bg-neon-purple text-white text-sm font-bold rounded hover:bg-neon-purple/80 transition shadow-[0_0_15px_rgba(157,0,255,0.4)]">Registro</a>
+                            <a href="{{ route('register') }}" class="px-4 py-2 bg-neon-purple text-white text-sm font-bold rounded hover:bg-neon-purple/80 transition">Registro</a>
                         @endauth
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- Contenido Principal -->
-        <main class="flex-grow py-8">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                @if(session('success'))
-                    <div class="bg-green-900/50 border border-green-500 text-green-200 px-4 py-3 rounded mb-6 backdrop-blur-sm">
-                        {{ session('success') }}
+        <!-- Banner de baneo -->
+        @auth
+            @php
+                $ban = Auth::user()->activeBan();
+            @endphp
+            @if(Auth::user()->isBanned() && $ban)
+                <div class="bg-neon-red/20 border-b border-neon-red/30 py-3">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <svg class="w-6 h-6 text-neon-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                </svg>
+                                <span class="text-white font-bold">
+                                    Has sido baneado: {{ $ban->reason }}
+                                </span>
+                                @if(!$ban->is_permanent)
+                                    <span class="text-gray-300 text-sm">
+                                        Tiempo restante: {{ $ban->timeLeft() }}
+                                    </span>
+                                @endif
+                            </div>
+                            <span class="text-neon-red text-sm font-bold">🚫 ACCESO RESTRINGIDO</span>
+                        </div>
                     </div>
-                @endif
-                
-                {{ $slot }}
+                </div>
+            @endif
+        @endauth
+
+        <!-- CONTENEDOR PRINCIPAL CON IMÁGENES LATERALES ROTATIVAS -->
+        <div class="relative flex-grow">
+            <!-- FONDO IZQUIERDO - Imágenes rotativas con fade suave -->
+            <div class="fixed left-0 top-0 h-full w-1/2 pointer-events-none overflow-hidden">
+                <div class="relative w-full h-full">
+                    <img id="leftImage" 
+                         src="https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=1887&auto=format&fit=crop" 
+                         alt="Anime Collection" 
+                         class="absolute inset-0 w-full h-full object-cover opacity-30 fade-image">
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent to-gamer-dark"></div>
+                </div>
             </div>
-        </main>
-        
+
+            <!-- FONDO DERECHO - Imágenes rotativas con fade suave -->
+            <div class="fixed right-0 top-0 h-full w-1/2 pointer-events-none overflow-hidden">
+                <div class="relative w-full h-full">
+                    <img id="rightImage" 
+                         src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop" 
+                         alt="Gaming Setup" 
+                         class="absolute inset-0 w-full h-full object-cover opacity-30 fade-image">
+                    <div class="absolute inset-0 bg-gradient-to-l from-transparent to-gamer-dark"></div>
+                </div>
+            </div>
+
+            <!-- CONTENIDO CENTRAL -->
+            <div class="relative z-10 min-h-screen">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    @if(session('success'))
+                        <div class="bg-green-900/50 border border-green-500 text-green-200 px-4 py-3 rounded mb-6">
+                            {{ session('success') }}
+                        </div>
+                    @endif
+                    
+                    @if(session('error'))
+                        <div class="bg-red-900/50 border border-neon-red text-red-200 px-4 py-3 rounded mb-6">
+                            {{ session('error') }}
+                        </div>
+                    @endif
+                    
+                    {{ $slot }}
+                </div>
+            </div>
+        </div>
+
         <!-- Footer -->
-        <footer class="bg-black/80 border-t border-gray-800 py-12">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div class="col-span-1 md:col-span-2">
-                    <div class="flex items-center mb-4">
-                        <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-10 w-auto">
-                        <span class="ml-2 text-xl font-bold tracking-tighter">GAMER <span class="text-neon-purple">GUILD</span></span>
-                    </div>
-                    <p class="text-gray-500 text-sm max-w-xs">
-                        Tu santuario definitivo para todo lo relacionado con videojuegos, anime y cultura geek. Únete a la hermandad.
-                    </p>
+        <footer class="bg-black/80 border-t border-gray-800 py-12 relative z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center text-gray-500 text-sm">
+                    &copy; {{ date('Y') }} Gamer Guild. Todos los derechos reservados.
                 </div>
-                <div>
-                    <h3 class="text-neon-blue font-bold uppercase tracking-widest text-sm mb-4">Enlaces</h3>
-                    <ul class="space-y-2 text-sm text-gray-400">
-                        <li><a href="#" class="hover:text-white transition">Sobre nosotros</a></li>
-                        <li><a href="#" class="hover:text-white transition">Términos y condiciones</a></li>
-                        <li><a href="#" class="hover:text-white transition">Privacidad</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="text-neon-purple font-bold uppercase tracking-widest text-sm mb-4">Redes Sociales</h3>
-                    <div class="flex space-x-4">
-                        <a href="#" class="text-gray-400 hover:text-neon-blue transition">
-                            <span class="sr-only">Twitter</span>
-                            <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-8 pt-8 border-t border-gray-900 text-center text-xs text-gray-600">
-                &copy; {{ date('Y') }} Gamer Guild. Todos los derechos reservados.
             </div>
         </footer>
     </div>
+
+    <!-- CHAT FLOTANTE -->
+    @auth
+        @if(!Auth::user()->isBanned())
+            @include('components.floating-chat')
+        @endif
+    @endauth
+
+    <script>
+        // Array de imágenes para el lado izquierdo (Anime/Figuras)
+        const leftImages = [
+            'https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=1887&auto=format&fit=crop',
+            'https://i.pinimg.com/736x/bc/a3/80/bca380011a5a682a9e7766c1d7c2db82.jpg',
+            'https://tienda-dragon-ball.com/wp-content/uploads/2024/08/figura-de-goku-ultra-instinto-1.webp',
+            'https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=1887&auto=format&fit=crop'
+        ];
+
+        // Array de imágenes para el lado derecho (Videojuegos)
+        const rightImages = [
+            'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop',
+            'https://periodismo.ull.es/wp-content/uploads/2022/04/Se-rumorea-que-Elden-Ring-realizara-proximamente-una-nueva-prueba.jpg',
+            'https://cdn1.epicgames.com/offer/e9a679451d094c1ba3d008b6a01adec5/EGS_FINALFANTASYVIIREBIRTH_SquareEnix_S1_2560x1440-e254f978084058f898118dc49728d04c',
+            'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop'
+        ];
+
+        let leftIndex = 0;
+        let rightIndex = 0;
+        let leftTimeout, rightTimeout;
+
+        function changeImage(side) {
+            if (side === 'left') {
+                const leftImg = document.getElementById('leftImage');
+                leftIndex = (leftIndex + 1) % leftImages.length;
+                
+                // Fade out
+                leftImg.style.opacity = '0';
+                
+                // Cambiar imagen y fade in después de 1 segundo
+                setTimeout(() => {
+                    leftImg.src = leftImages[leftIndex];
+                    leftImg.style.opacity = '0.3';
+                }, 1000);
+                
+                // Programar siguiente cambio
+                leftTimeout = setTimeout(() => changeImage('left'), 7000);
+                
+            } else if (side === 'right') {
+                const rightImg = document.getElementById('rightImage');
+                rightIndex = (rightIndex + 1) % rightImages.length;
+                
+                // Fade out
+                rightImg.style.opacity = '0';
+                
+                // Cambiar imagen y fade in después de 1 segundo
+                setTimeout(() => {
+                    rightImg.src = rightImages[rightIndex];
+                    rightImg.style.opacity = '0.3';
+                }, 1000);
+                
+                // Programar siguiente cambio
+                rightTimeout = setTimeout(() => changeImage('right'), 7000);
+            }
+        }
+
+        // Iniciar rotación después de 7 segundos
+        setTimeout(() => {
+            changeImage('left');
+            changeImage('right');
+        }, 7000);
+
+        // Limpiar timeouts si es necesario (opcional)
+        window.addEventListener('beforeunload', function() {
+            if (leftTimeout) clearTimeout(leftTimeout);
+            if (rightTimeout) clearTimeout(rightTimeout);
+        });
+    </script>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
 </html>
