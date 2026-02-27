@@ -18,6 +18,11 @@
         .neon-text-blue { text-shadow: 0 0 5px #00d2ff, 0 0 10px #00d2ff; }
         .neon-text-purple { text-shadow: 0 0 5px #9d00ff, 0 0 10px #9d00ff; }
         .neon-text-red { text-shadow: 0 0 5px #ff0055, 0 0 10px #ff0055; }
+        
+        /* Transiciones suaves para las imágenes */
+        .fade-image {
+            transition: opacity 2s ease-in-out;
+        }
     </style>
 </head>
 <body class="font-sans antialiased bg-gamer-dark text-gray-100">
@@ -36,7 +41,7 @@
                         </a>
                     </div>
 
-                    <!-- Menú con categorías y SORTEOS -->
+                    <!-- Menú con categorías -->
                     <nav class="hidden md:flex space-x-6 items-center">
                         <a href="<?php echo e(route('products.category', 'consolas')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->is('products/category/consolas') ? 'text-neon-blue' : ''); ?>">Consolas</a>
                         <a href="<?php echo e(route('products.category', 'videojuegos')); ?>" class="text-sm font-bold uppercase tracking-wider transition nav-link-hover <?php echo e(request()->is('products/category/videojuegos') ? 'text-neon-blue' : ''); ?>">Videojuegos</a>
@@ -146,22 +151,28 @@
             <?php endif; ?>
         <?php endif; ?>
 
-        <!-- CONTENEDOR PRINCIPAL CON IMÁGENES LATERALES -->
+        <!-- CONTENEDOR PRINCIPAL CON IMÁGENES LATERALES ROTATIVAS -->
         <div class="relative flex-grow">
-            <!-- FONDO IZQUIERDO - Imagen anime -->
+            <!-- FONDO IZQUIERDO - Imágenes rotativas con fade suave -->
             <div class="fixed left-0 top-0 h-full w-1/2 pointer-events-none overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=1887&auto=format&fit=crop" 
-                     alt="Anime Collection" 
-                     class="w-full h-full object-cover opacity-30">
-                <div class="absolute inset-0 bg-gradient-to-r from-transparent to-gamer-dark"></div>
+                <div class="relative w-full h-full">
+                    <img id="leftImage" 
+                         src="https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=1887&auto=format&fit=crop" 
+                         alt="Anime Collection" 
+                         class="absolute inset-0 w-full h-full object-cover opacity-30 fade-image">
+                    <div class="absolute inset-0 bg-gradient-to-r from-transparent to-gamer-dark"></div>
+                </div>
             </div>
 
-            <!-- FONDO DERECHO - Imagen gaming -->
+            <!-- FONDO DERECHO - Imágenes rotativas con fade suave -->
             <div class="fixed right-0 top-0 h-full w-1/2 pointer-events-none overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop" 
-                     alt="Gaming Setup" 
-                     class="w-full h-full object-cover opacity-30">
-                <div class="absolute inset-0 bg-gradient-to-l from-transparent to-gamer-dark"></div>
+                <div class="relative w-full h-full">
+                    <img id="rightImage" 
+                         src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop" 
+                         alt="Gaming Setup" 
+                         class="absolute inset-0 w-full h-full object-cover opacity-30 fade-image">
+                    <div class="absolute inset-0 bg-gradient-to-l from-transparent to-gamer-dark"></div>
+                </div>
             </div>
 
             <!-- CONTENIDO CENTRAL -->
@@ -203,6 +214,75 @@
             <?php echo $__env->make('components.floating-chat', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
         <?php endif; ?>
     <?php endif; ?>
+
+    <script>
+        // Array de imágenes para el lado izquierdo (Anime/Figuras)
+        const leftImages = [
+            'https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=1887&auto=format&fit=crop',
+            'https://i.pinimg.com/736x/bc/a3/80/bca380011a5a682a9e7766c1d7c2db82.jpg',
+            'https://tienda-dragon-ball.com/wp-content/uploads/2024/08/figura-de-goku-ultra-instinto-1.webp',
+            'https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=1887&auto=format&fit=crop'
+        ];
+
+        // Array de imágenes para el lado derecho (Videojuegos)
+        const rightImages = [
+            'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop',
+            'https://periodismo.ull.es/wp-content/uploads/2022/04/Se-rumorea-que-Elden-Ring-realizara-proximamente-una-nueva-prueba.jpg',
+            'https://cdn1.epicgames.com/offer/e9a679451d094c1ba3d008b6a01adec5/EGS_FINALFANTASYVIIREBIRTH_SquareEnix_S1_2560x1440-e254f978084058f898118dc49728d04c',
+            'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop'
+        ];
+
+        let leftIndex = 0;
+        let rightIndex = 0;
+        let leftTimeout, rightTimeout;
+
+        function changeImage(side) {
+            if (side === 'left') {
+                const leftImg = document.getElementById('leftImage');
+                leftIndex = (leftIndex + 1) % leftImages.length;
+                
+                // Fade out
+                leftImg.style.opacity = '0';
+                
+                // Cambiar imagen y fade in después de 1 segundo
+                setTimeout(() => {
+                    leftImg.src = leftImages[leftIndex];
+                    leftImg.style.opacity = '0.3';
+                }, 1000);
+                
+                // Programar siguiente cambio
+                leftTimeout = setTimeout(() => changeImage('left'), 7000);
+                
+            } else if (side === 'right') {
+                const rightImg = document.getElementById('rightImage');
+                rightIndex = (rightIndex + 1) % rightImages.length;
+                
+                // Fade out
+                rightImg.style.opacity = '0';
+                
+                // Cambiar imagen y fade in después de 1 segundo
+                setTimeout(() => {
+                    rightImg.src = rightImages[rightIndex];
+                    rightImg.style.opacity = '0.3';
+                }, 1000);
+                
+                // Programar siguiente cambio
+                rightTimeout = setTimeout(() => changeImage('right'), 7000);
+            }
+        }
+
+        // Iniciar rotación después de 7 segundos
+        setTimeout(() => {
+            changeImage('left');
+            changeImage('right');
+        }, 7000);
+
+        // Limpiar timeouts si es necesario (opcional)
+        window.addEventListener('beforeunload', function() {
+            if (leftTimeout) clearTimeout(leftTimeout);
+            if (rightTimeout) clearTimeout(rightTimeout);
+        });
+    </script>
 
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
