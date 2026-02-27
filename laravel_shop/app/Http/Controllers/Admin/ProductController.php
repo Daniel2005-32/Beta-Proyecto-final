@@ -46,11 +46,19 @@ class ProductController extends Controller
             'image' => 'required|url'
         ]);
 
-        // Manejar checkboxes (si no vienen, son false)
         $data = $request->all();
+        
+        // Manejar checkboxes
         $data['featured'] = $request->has('featured') ? true : false;
         $data['trending'] = $request->has('trending') ? true : false;
         $data['is_exclusive'] = $request->has('is_exclusive') ? true : false;
+        
+        // Manejar oferta
+        $data['original_price'] = null;
+        if ($request->has('on_sale') && $request->on_sale) {
+            $data['original_price'] = $request->original_price;
+            // El precio de oferta ya viene en 'price'
+        }
 
         Product::create($data);
         return redirect()->route('admin.products.index')->with('success', 'Producto creado correctamente');
@@ -78,11 +86,19 @@ class ProductController extends Controller
             'stock' => 'required|integer|min:0',
         ]);
 
-        // Manejar checkboxes (si no vienen, son false)
         $data = $request->all();
+        
+        // Manejar checkboxes
         $data['featured'] = $request->has('featured') ? true : false;
         $data['trending'] = $request->has('trending') ? true : false;
         $data['is_exclusive'] = $request->has('is_exclusive') ? true : false;
+        
+        // Manejar oferta
+        if ($request->has('on_sale') && $request->on_sale) {
+            $data['original_price'] = $request->original_price;
+        } else {
+            $data['original_price'] = null;
+        }
 
         $product->update($data);
         return redirect()->route('admin.products.index')->with('success', 'Producto actualizado correctamente');
