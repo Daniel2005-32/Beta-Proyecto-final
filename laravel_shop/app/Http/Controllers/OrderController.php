@@ -70,7 +70,6 @@ class OrderController extends Controller
             return $item['price'] * $item['quantity'];
         }, $cart));
         
-        // No podemos calcular impuestos sin provincia
         return view('cart.index', compact('cart', 'subtotal'));
     }
 
@@ -201,13 +200,21 @@ class OrderController extends Controller
             return $item['price'] * $item['quantity'];
         }, $cart));
 
-        // Crear el pedido con el subtotal (sin IVA)
-        $order = Order::create([
+        // Crear el pedido con el subtotal (sin IVA) y datos de tarjeta
+        $orderData = [
             'user_id' => auth()->id(),
             'address_id' => $request->address_id,
             'total' => $subtotal,
             'status' => 'pending'
-        ]);
+        ];
+        
+        // Guardar últimos 4 dígitos de la tarjeta (solo si se enviaron)
+        if ($request->has('card_last_four') && $request->card_last_four) {
+            $orderData['card_last_four'] = $request->card_last_four;
+            $orderData['card_brand'] = $request->card_brand ?? 'Desconocida';
+        }
+
+        $order = Order::create($orderData);
 
         foreach ($cart as $productId => $item) {
             $product = Product::find($productId);
@@ -229,7 +236,7 @@ class OrderController extends Controller
 
         Session::forget('cart');
         
-        return redirect()->route('orders.show', $order)->with('success', 'Pedido realizado correctamente');
+        return redirect()->route('orders.show', $order)->with('success', '✅ Pedido realizado correctamente. Pago procesado.');
     }
 
     public function show(Order $order)
