@@ -1,4 +1,13 @@
-<x-store-layout>
+<?php if (isset($component)) { $__componentOriginalfa92fd5562a0c82e62f2e625d459a2d3 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalfa92fd5562a0c82e62f2e625d459a2d3 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.store-layout','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('store-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
     <div class="py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center mb-8">
@@ -8,22 +17,24 @@
                     </h1>
                     <p class="text-gray-400">Administra los sorteos mensuales</p>
                 </div>
-                <a href="{{ route('admin.raffles.create') }}" class="px-6 py-3 bg-neon-purple text-white font-bold rounded-lg hover:scale-105 transition">
+                <a href="<?php echo e(route('admin.raffles.create')); ?>" class="px-6 py-3 bg-neon-purple text-white font-bold rounded-lg hover:scale-105 transition">
                     + Nuevo Sorteo
                 </a>
             </div>
 
-            @if(session('success'))
+            <?php if(session('success')): ?>
                 <div class="bg-green-900/50 border border-green-500 text-green-200 px-4 py-3 rounded-lg mb-6">
-                    {{ session('success') }}
-                </div>
-            @endif
+                    <?php echo e(session('success')); ?>
 
-            @if(session('error'))
-                <div class="bg-red-900/50 border border-neon-red text-red-200 px-4 py-3 rounded-lg mb-6">
-                    {{ session('error') }}
                 </div>
-            @endif
+            <?php endif; ?>
+
+            <?php if(session('error')): ?>
+                <div class="bg-red-900/50 border border-neon-red text-red-200 px-4 py-3 rounded-lg mb-6">
+                    <?php echo e(session('error')); ?>
+
+                </div>
+            <?php endif; ?>
 
             <div class="bg-gamer-card rounded-2xl border border-neon-purple/20 overflow-hidden">
                 <table class="w-full">
@@ -40,86 +51,87 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($raffles as $raffle)
-                            @php
+                        <?php $__currentLoopData = $raffles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $raffle): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php
                                 $extra = $raffle->getExtraData();
                                 $product = $raffle->getProduct();
                                 $cleanDesc = $raffle->getCleanDescription();
-                            @endphp
+                            ?>
                             <tr class="border-b border-gray-800 hover:bg-gray-800/50 transition">
-                                <td class="px-6 py-4 text-gray-300">{{ $raffle->id }}</td>
+                                <td class="px-6 py-4 text-gray-300"><?php echo e($raffle->id); ?></td>
                                 <td class="px-6 py-4">
-                                    <div class="text-white font-medium">{{ $raffle->title }}</div>
-                                    <div class="text-gray-500 text-xs">{{ Str::limit($cleanDesc, 50) }}</div>
+                                    <div class="text-white font-medium"><?php echo e($raffle->title); ?></div>
+                                    <div class="text-gray-500 text-xs"><?php echo e(Str::limit($cleanDesc, 50)); ?></div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    @if($product)
+                                    <?php if($product): ?>
                                         <div class="flex items-center space-x-2">
-                                            <img src="{{ $product->image }}" alt="" class="w-8 h-8 object-cover rounded">
-                                            <span class="text-gray-300">{{ $product->name }}</span>
+                                            <img src="<?php echo e($product->image); ?>" alt="" class="w-8 h-8 object-cover rounded">
+                                            <span class="text-gray-300"><?php echo e($product->name); ?></span>
                                         </div>
-                                    @else
+                                    <?php else: ?>
                                         <span class="text-gray-500">Producto no disponible</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="text-neon-purple">{{ $extra['ticket_price'] ?? 20 }}€</span>
+                                    <span class="text-neon-purple"><?php echo e($extra['ticket_price'] ?? 20); ?>€</span>
                                 </td>
                                 <td class="px-6 py-4 text-gray-300">
-                                    {{ isset($extra['end_date']) ? \Carbon\Carbon::parse($extra['end_date'])->format('d/m/Y H:i') : ($raffle->draw_date ? $raffle->draw_date->format('d/m/Y H:i') : 'No definida') }}
+                                    <?php echo e(isset($extra['end_date']) ? \Carbon\Carbon::parse($extra['end_date'])->format('d/m/Y H:i') : ($raffle->draw_date ? $raffle->draw_date->format('d/m/Y H:i') : 'No definida')); ?>
+
                                 </td>
                                 <td class="px-6 py-4">
-                                    @if($raffle->status == 'pending')
+                                    <?php if($raffle->status == 'pending'): ?>
                                         <span class="px-3 py-1 bg-green-600/20 text-green-400 rounded-full text-xs">Activo</span>
-                                    @elseif($raffle->status == 'completed')
+                                    <?php elseif($raffle->status == 'completed'): ?>
                                         <span class="px-3 py-1 bg-gray-600/20 text-gray-400 rounded-full text-xs">Finalizado</span>
-                                    @else
-                                        <span class="px-3 py-1 bg-yellow-600/20 text-yellow-400 rounded-full text-xs">{{ $raffle->status }}</span>
-                                    @endif
+                                    <?php else: ?>
+                                        <span class="px-3 py-1 bg-yellow-600/20 text-yellow-400 rounded-full text-xs"><?php echo e($raffle->status); ?></span>
+                                    <?php endif; ?>
                                 </td>
                                 <td class="px-6 py-4">
-                                    @if($raffle->winner)
-                                        <span class="text-neon-blue">{{ $raffle->winner->name }}</span>
-                                    @else
+                                    <?php if($raffle->winner): ?>
+                                        <span class="text-neon-blue"><?php echo e($raffle->winner->name); ?></span>
+                                    <?php else: ?>
                                         <span class="text-gray-500">—</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex space-x-2">
-                                        <a href="{{ route('admin.raffles.edit', $raffle) }}" 
+                                        <a href="<?php echo e(route('admin.raffles.edit', $raffle)); ?>" 
                                            class="px-3 py-1 bg-neon-purple/10 text-neon-purple rounded-lg hover:bg-neon-purple hover:text-white transition text-sm">
                                             Editar
                                         </a>
                                         
-                                        @if($raffle->status == 'pending')
-                                            @if(!$raffle->winner)
-                                                <form action="{{ route('admin.raffles.draw', $raffle) }}" method="POST" class="inline">
-                                                    @csrf
+                                        <?php if($raffle->status == 'pending'): ?>
+                                            <?php if(!$raffle->winner): ?>
+                                                <form action="<?php echo e(route('admin.raffles.draw', $raffle)); ?>" method="POST" class="inline">
+                                                    <?php echo csrf_field(); ?>
                                                     <button type="submit" 
                                                             class="px-3 py-1 bg-neon-blue/10 text-neon-blue rounded-lg hover:bg-neon-blue hover:text-gamer-dark transition text-sm"
                                                             onclick="return confirm('¿Sortear ganador ahora? Esto finalizará el sorteo.')">
                                                         Sortear
                                                     </button>
                                                 </form>
-                                            @endif
-                                        @endif
+                                            <?php endif; ?>
+                                        <?php endif; ?>
                                         
-                                        @if($raffle->status == 'pending' && $raffle->draw_date < now())
-                                            <form action="{{ route('admin.raffles.activate', $raffle) }}" method="POST" class="inline">
-                                                @csrf
+                                        <?php if($raffle->status == 'pending' && $raffle->draw_date < now()): ?>
+                                            <form action="<?php echo e(route('admin.raffles.activate', $raffle)); ?>" method="POST" class="inline">
+                                                <?php echo csrf_field(); ?>
                                                 <button type="submit" 
                                                         class="px-3 py-1 bg-green-600/10 text-green-400 rounded-lg hover:bg-green-600 hover:text-white transition text-sm">
                                                     Activar
                                                 </button>
                                             </form>
-                                        @endif
+                                        <?php endif; ?>
                                         
-                                        <form action="{{ route('admin.raffles.destroy', $raffle) }}" 
+                                        <form action="<?php echo e(route('admin.raffles.destroy', $raffle)); ?>" 
                                               method="POST" 
                                               onsubmit="return confirm('¿Eliminar este sorteo?')"
                                               class="inline">
-                                            @csrf
-                                            @method('DELETE')
+                                            <?php echo csrf_field(); ?>
+                                            <?php echo method_field('DELETE'); ?>
                                             <button type="submit" class="px-3 py-1 bg-neon-red/10 text-neon-red rounded-lg hover:bg-neon-red hover:text-white transition text-sm">
                                                 Eliminar
                                             </button>
@@ -127,14 +139,25 @@
                                     </div>
                                 </td>
                             </tr>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </tbody>
                 </table>
             </div>
 
             <div class="mt-6">
-                {{ $raffles->links() }}
+                <?php echo e($raffles->links()); ?>
+
             </div>
         </div>
     </div>
-</x-store-layout>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalfa92fd5562a0c82e62f2e625d459a2d3)): ?>
+<?php $attributes = $__attributesOriginalfa92fd5562a0c82e62f2e625d459a2d3; ?>
+<?php unset($__attributesOriginalfa92fd5562a0c82e62f2e625d459a2d3); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalfa92fd5562a0c82e62f2e625d459a2d3)): ?>
+<?php $component = $__componentOriginalfa92fd5562a0c82e62f2e625d459a2d3; ?>
+<?php unset($__componentOriginalfa92fd5562a0c82e62f2e625d459a2d3); ?>
+<?php endif; ?>
+<?php /**PATH /home/ctk/Documentos/Proyecto_Daniel/Proyecto-final-main/laravel_shop/resources/views/admin/raffles/index.blade.php ENDPATH**/ ?>

@@ -49,6 +49,7 @@ class RaffleController extends Controller
             'max_entries' => 'nullable|integer|min:1',
         ]);
 
+        // Guardar información adicional en la descripción
         $extraData = [
             'product_id' => $request->product_id,
             'product_name' => Product::find($request->product_id)->name,
@@ -60,10 +61,13 @@ class RaffleController extends Controller
 
         $description = $request->description . "\n\n[DATOS_SORTEO]\n" . json_encode($extraData);
 
+        // Determinar el estado - SOLO pending o completed
         $now = Carbon::now();
         $startDate = Carbon::parse($request->start_date);
         
-        $status = $now->lt($startDate) ? 'pending' : 'pending'; // Siempre pending al crear
+        // Si la fecha de inicio ya pasó, lo ponemos como pending (activo)
+        // Si no, también pending (esperando)
+        $status = 'pending';
 
         Raffle::create([
             'title' => $request->title,
@@ -82,9 +86,10 @@ class RaffleController extends Controller
             abort(403);
         }
 
+        // Extraer datos del sorteo de la descripción
         $extraData = $raffle->getExtraData();
+
         $products = Product::where('stock', '>', 0)->get();
-        
         return view('admin.raffles.edit', compact('raffle', 'products', 'extraData'));
     }
 
@@ -104,6 +109,7 @@ class RaffleController extends Controller
             'max_entries' => 'nullable|integer|min:1',
         ]);
 
+        // Guardar información adicional en la descripción
         $extraData = [
             'product_id' => $request->product_id,
             'product_name' => Product::find($request->product_id)->name,
@@ -113,12 +119,22 @@ class RaffleController extends Controller
             'end_date' => $request->end_date,
         ];
 
-        $newDescription = $request->description . "\n\n[DATOS_SORTEO]\n" . json_encode($extraData);
+        // Limpiar la descripción actual del JSON antiguo
+        $cleanDescription = $raffle->getCleanDescription();
+        $newDescription = $cleanDescription . "\n\n[DATOS_SORTEO]\n" . json_encode($extraData);
+
+        // Determinar el estado - SOLO pending o completed
+        $now = Carbon::now();
+        $startDate = Carbon::parse($request->start_date);
+        
+        // Si la fecha de inicio ya pasó, lo ponemos como pending (activo)
+        $status = 'pending';
 
         $raffle->update([
             'title' => $request->title,
             'description' => $newDescription,
             'draw_date' => $request->end_date,
+            'status' => $status,
         ]);
 
         return redirect()->route('admin.raffles.index')
@@ -136,18 +152,6 @@ class RaffleController extends Controller
             ->with('success', 'Sorteo eliminado');
     }
 
-    public function activate(Raffle $raffle)
-    {
-        if (!auth()->check() || !auth()->user()->is_admin) {
-            abort(403);
-        }
-
-        $raffle->update(['status' => 'pending']);
-        
-        return redirect()->route('admin.raffles.index')
-            ->with('success', 'Sorteo activado manualmente');
-    }
-
     public function drawWinner(Raffle $raffle)
     {
         if (!auth()->check() || !auth()->user()->is_admin) {
@@ -155,18 +159,27 @@ class RaffleController extends Controller
         }
 
         if ($raffle->status === 'completed') {
-            return redirect()->route('admin.raffles.index')
-                ->with('error', 'Este sorteo ya tiene un ganador');
+            return back()->with('error', 'Este sorteo ya tiene un ganador');
         }
 
         $winnerId = $raffle->drawWinner();
         
         if ($winnerId) {
-            return redirect()->route('admin.raffles.index')
-                ->with('success', '¡Ganador seleccionado correctamente!');
+            return back()->with('success', '¡Ganador seleccionado correctamente!');
         } else {
-            return redirect()->route('admin.raffles.index')
-                ->with('error', 'No hay participantes en este sorteo');
+            return back()->with('error', 'No hay participantes en este sorteo');
         }
+    }
+
+    public function activate(Raffle $raffle)
+    {
+        if (!auth()->check() || !auth()->user()->is_admin) {
+            abort(403);
+        }
+
+        // Cambiar a 'pending' que es el estado activo en la BD
+        $raffle->update(['status' => 'pending']);
+        
+        return back()->with('success', 'Sorteo activado correctamente');
     }
 }
