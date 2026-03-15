@@ -24,10 +24,16 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
+# Copy ONLY composer files first to leverage Docker layer caching
+COPY composer.json composer.lock ./
+
+# Install PRE dependenceis without autoloader/scripts
+RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
+
 # Copy application code
 COPY . .
 
-# Install PHP dependencies (Composer)
+# Finish composer setup WITH autoloader optimization
 RUN composer install --no-dev --optimize-autoloader
 
 # Copy Configuration files
