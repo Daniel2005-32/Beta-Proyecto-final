@@ -21,7 +21,8 @@ const user = computed(() => {
 
 const logout = async () => {
     try {
-        const base = import.meta.env.VITE_API_URL; const apiBase = base ? (base.endsWith('/api') ? base : base + '/api') : 'http://localhost:8000/api';
+        const base = import.meta.env.VITE_API_URL; 
+        const apiBase = base ? (base.endsWith('/api') ? base : base + '/api') : (window.location.hostname.includes('localhost') ? 'http://localhost:8000/api' : 'https://proyecto-final-desplegar.onrender.com/api');
         await axios.post(`${apiBase}/logout`, {}, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
