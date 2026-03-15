@@ -55,12 +55,48 @@
                     @endforeach
                 </div>
 
-                <!-- Total -->
-                <div class="mt-6 pt-6 border-t border-gray-800 flex justify-between items-center">
-                    <span class="text-xl text-white font-bold">Total</span>
-                    <span class="text-2xl text-neon-purple font-black">{{ number_format($order->total, 2) }}€</span>
+                <!-- Total base (sin impuestos) -->
+                <div class="mt-6 pt-6 border-t border-gray-800">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xl text-white font-bold">Total del pedido</span>
+                        <span class="text-2xl text-neon-purple font-black">{{ number_format($order->total, 2) }}€</span>
+                    </div>
+                    
+                    <!-- Información de impuestos -->
+                    @if($order->address)
+                        @php
+                            $province = $order->address->state;
+                            $taxRate = App\Helpers\PriceHelper::getTaxRate($province);
+                            $taxName = $taxRate == 7 ? 'IGIC' : 'IVA';
+                        @endphp
+                        <p class="text-xs text-gray-500 text-right mt-2">
+                            * {{ $taxName }} {{ $taxRate }}% aplicado (según dirección de envío)
+                        </p>
+                    @endif
                 </div>
             </div>
+
+            <!-- Información de pago -->
+            @if($order->card_last_four)
+            <div class="bg-gamer-card rounded-2xl border border-neon-green/20 p-8 mb-6">
+                <h2 class="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-neon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                    </svg>
+                    💳 Información de pago
+                </h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-gray-400 text-sm">Tarjeta</p>
+                        <p class="text-white font-bold">{{ $order->card_brand ?? 'Desconocida' }} terminada en {{ $order->card_last_four }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">Estado del pago</p>
+                        <p class="text-green-400 font-bold">✅ Pagado</p>
+                    </div>
+                </div>
+            </div>
+            @endif
 
             <!-- Dirección de entrega -->
             <div class="bg-gamer-card rounded-2xl border border-neon-blue/20 p-8 mb-6">
@@ -86,20 +122,16 @@
                             </p>
                         @endif
                         <p class="flex items-start gap-2">
-                            <span class="text-neon-blue min-w-[80px]">Barrio:</span>
-                            {{ $order->address->neighborhood }}
-                        </p>
-                        <p class="flex items-start gap-2">
                             <span class="text-neon-blue min-w-[80px]">Ciudad:</span>
                             {{ $order->address->city }} - {{ $order->address->state }}
                         </p>
                         <p class="flex items-start gap-2">
-                            <span class="text-neon-blue min-w-[80px]">CEP:</span>
+                            <span class="text-neon-blue min-w-[80px]">Código Postal:</span>
                             {{ $order->address->zipcode }}
                         </p>
                         <p class="flex items-start gap-2">
                             <span class="text-neon-blue min-w-[80px]">Teléfono:</span>
-                            {{ $order->address->formatted_phone }}
+                            {{ $order->address->phone }}
                         </p>
                     </div>
                 @else
@@ -130,7 +162,7 @@
                 </div>
             </div>
 
-            <!-- Botón para volver a comprar (opcional) -->
+            <!-- Botón para volver a comprar -->
             <div class="mt-8 text-center">
                 <a href="{{ route('products.index') }}" class="inline-flex items-center text-gray-400 hover:text-neon-blue transition">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

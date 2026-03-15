@@ -1,7 +1,7 @@
 -- ============================================================
 -- ARCHIVO: gamer_guild_completo.sql
 -- DESCRIPCIÓN: Backup completo de productos y categorías
--- PROYECTO: Gamer Guild - Tienda gaming/anime
+-- PROYECTO: Soul Guild - Tienda gaming/anime
 -- FECHA: 2026-02-25
 -- ============================================================
 
@@ -110,4 +110,4 @@ SELECT
     AVG(price) AS precio_medio
 FROM products;
 
-SELECT '🎮 ¡BASE DE DATOS DE GAMER GUILD COMPLETADA! 🎮' as '';
+SELECT '🎮 ¡BASE DE DATOS DE Soul GUILD COMPLETADA! 🎮' as '';

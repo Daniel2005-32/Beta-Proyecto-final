@@ -41,7 +41,7 @@
                                         </div>
                                         <div class="flex justify-between text-lg font-bold">
                                             <span class="text-gray-300">Puja actual:</span>
-                                            <span class="text-neon-purple">{{ number_format($product->getCurrentBid(), 2) }}€</span>
+                                            <span class="text-neon-purple">{{ number_format($product->price, 2) }}€</span>
                                         </div>
                                         @if($product->auction_winner_id)
                                             <div class="flex justify-between text-sm">

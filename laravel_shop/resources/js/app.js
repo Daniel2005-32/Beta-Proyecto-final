@@ -1,5 +1,12 @@
 import './bootstrap';
 import { createApp } from 'vue';
-import App from './App.vue'; // Asegúrate que App.vue exista o ajústalo a tu componente principal
+import BanModal from './components/BanModal.vue';
 
-createApp(App).mount('#app');
+// Crear la app Vue y montarla en un elemento específico
+const app = createApp({});
+
+// Registrar el componente globalmente
+app.component('ban-modal', BanModal);
+
+// Montar en un div con id 'app' si existe
+app.mount('#app');

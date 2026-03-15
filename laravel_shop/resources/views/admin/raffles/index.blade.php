@@ -50,7 +50,7 @@
                                 <td class="px-6 py-4 text-gray-300">{{ $raffle->id }}</td>
                                 <td class="px-6 py-4">
                                     <div class="text-white font-medium">{{ $raffle->title }}</div>
-                                    <div class="text-gray-500 text-xs">{{ $cleanDesc }}</div>
+                                    <div class="text-gray-500 text-xs">{{ Str::limit($cleanDesc, 50) }}</div>
                                 </td>
                                 <td class="px-6 py-4">
                                     @if($product)
@@ -66,15 +66,15 @@
                                     <span class="text-neon-purple">{{ $extra['ticket_price'] ?? 20 }}€</span>
                                 </td>
                                 <td class="px-6 py-4 text-gray-300">
-                                    {{ isset($extra['end_date']) ? Carbon\Carbon::parse($extra['end_date'])->format('d/m/Y H:i') : ($raffle->draw_date ? $raffle->draw_date->format('d/m/Y H:i') : 'No definida') }}
+                                    {{ isset($extra['end_date']) ? \Carbon\Carbon::parse($extra['end_date'])->format('d/m/Y H:i') : ($raffle->draw_date ? $raffle->draw_date->format('d/m/Y H:i') : 'No definida') }}
                                 </td>
                                 <td class="px-6 py-4">
                                     @if($raffle->status == 'pending')
-                                        <span class="px-3 py-1 bg-yellow-600/20 text-yellow-400 rounded-full text-xs">Pendiente</span>
+                                        <span class="px-3 py-1 bg-green-600/20 text-green-400 rounded-full text-xs">Activo</span>
                                     @elseif($raffle->status == 'completed')
-                                        <span class="px-3 py-1 bg-green-600/20 text-green-400 rounded-full text-xs">Completado</span>
+                                        <span class="px-3 py-1 bg-gray-600/20 text-gray-400 rounded-full text-xs">Finalizado</span>
                                     @else
-                                        <span class="px-3 py-1 bg-gray-600/20 text-gray-400 rounded-full text-xs">{{ $raffle->status }}</span>
+                                        <span class="px-3 py-1 bg-yellow-600/20 text-yellow-400 rounded-full text-xs">{{ $raffle->status }}</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4">
@@ -92,22 +92,24 @@
                                         </a>
                                         
                                         @if($raffle->status == 'pending')
+                                            @if(!$raffle->winner)
+                                                <form action="{{ route('admin.raffles.draw', $raffle) }}" method="POST" class="inline">
+                                                    @csrf
+                                                    <button type="submit" 
+                                                            class="px-3 py-1 bg-neon-blue/10 text-neon-blue rounded-lg hover:bg-neon-blue hover:text-gamer-dark transition text-sm"
+                                                            onclick="return confirm('¿Sortear ganador ahora? Esto finalizará el sorteo.')">
+                                                        Sortear
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        @endif
+                                        
+                                        @if($raffle->status == 'pending' && $raffle->draw_date < now())
                                             <form action="{{ route('admin.raffles.activate', $raffle) }}" method="POST" class="inline">
                                                 @csrf
                                                 <button type="submit" 
-                                                        class="px-3 py-1 bg-neon-blue/10 text-neon-blue rounded-lg hover:bg-neon-blue hover:text-gamer-dark transition text-sm">
+                                                        class="px-3 py-1 bg-green-600/10 text-green-400 rounded-lg hover:bg-green-600 hover:text-white transition text-sm">
                                                     Activar
-                                                </button>
-                                            </form>
-                                        @endif
-                                        
-                                        @if($raffle->status == 'pending' || $raffle->status == 'completed')
-                                            <form action="{{ route('admin.raffles.draw', $raffle) }}" method="POST" class="inline">
-                                                @csrf
-                                                <button type="submit" 
-                                                        class="px-3 py-1 bg-neon-purple/10 text-neon-purple rounded-lg hover:bg-neon-purple hover:text-white transition text-sm"
-                                                        onclick="return confirm('¿Sortear ganador ahora? Esto finalizará el sorteo.')">
-                                                    Sortear
                                                 </button>
                                             </form>
                                         @endif

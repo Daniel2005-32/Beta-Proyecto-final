@@ -13,7 +13,7 @@
                     <div>
                         <img src="{{ $product->image }}" alt="{{ $product->name }}" class="w-full rounded-lg">
                     </div>
-                    
+
                     <!-- Detalles del producto -->
                     <div>
                         <span class="text-neon-blue text-sm uppercase">{{ $product->category->name }}</span>
@@ -27,11 +27,11 @@
                         
                         <p class="text-gray-400 mt-4">{{ $product->description }}</p>
                         
-                        <!-- Precio -->
+                        <!-- Precio SIN IVA -->
                         <div class="mt-6">
                             @if($product->isAuctionActive())
-                                <span class="text-3xl font-black text-neon-purple">{{ number_format($product->getCurrentBid(), 2) }}€</span>
-                                <span class="ml-2 text-gray-500 line-through text-lg">{{ number_format($product->price, 2) }}€</span>
+                                <span class="text-3xl font-black text-neon-purple">{{ number_format($product->price, 2) }}€</span>
+                                <span class="ml-2 text-gray-500 line-through text-lg">{{ number_format($product->auction_start_price ?? $product->price, 2) }}€</span>
                                 <p class="text-sm text-gray-400 mt-1">Subasta activa - {{ $product->auctionTimeLeft() }} restantes</p>
                             @elseif($product->original_price && $product->original_price > $product->price)
                                 <span class="text-3xl font-black text-neon-red">{{ number_format($product->price, 2) }}€</span>
@@ -82,6 +82,15 @@
                     </div>
                 </div>
             </div>
+
+            <!-- ============================================ -->
+            <!-- SECCIÓN DE VALORACIONES - AQUÍ VA TODO -->
+            <!-- ============================================ -->
+            <div class="mt-12">
+                @include('products.partials.reviews')
+            </div>
+            <!-- ============================================ -->
+
         </div>
     </div>
 </x-store-layout>

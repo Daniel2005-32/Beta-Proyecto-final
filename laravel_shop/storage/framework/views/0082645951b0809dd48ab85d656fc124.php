@@ -28,7 +28,10 @@
         
         <!-- Cabecera del chat -->
         <div class="bg-gradient-to-r from-neon-blue to-neon-purple p-4 flex justify-between items-center">
-            <h3 class="text-white font-bold">Chat comunitario</h3>
+            <div>
+                <h3 class="text-white font-bold">Chat comunitario</h3>
+                <p class="text-xs text-white/70" x-show="!isAuthenticated">Modo solo lectura</p>
+            </div>
             <div class="flex space-x-2">
                 <button @click="minimizeChat()" class="text-white/80 hover:text-white">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,71 +71,71 @@
                 </div>
             </template>
             
-            <!-- Mensaje para usuarios no registrados -->
-            <template x-if="!isAuthenticated && messages.length === 0">
+            <!-- Mensaje cuando no hay mensajes -->
+            <template x-if="messages.length === 0">
                 <div class="text-center py-8">
                     <div class="text-5xl mb-3">💬</div>
-                    <p class="text-gray-400 text-sm mb-2">¡Sé el primero en hablar!</p>
-                    <p class="text-xs text-gray-500">Inicia sesión para participar</p>
+                    <p class="text-gray-400 text-sm mb-2">No hay mensajes aún</p>
+                    <p class="text-xs text-gray-500">¡Sé el primero en hablar!</p>
                 </div>
             </template>
         </div>
 
         <!-- Formulario de mensaje -->
         <div class="border-t border-gray-800 p-3">
-            <form @submit.prevent="sendMessage">
+            <!-- USUARIOS AUTENTICADOS: pueden escribir -->
+            <form x-show="isAuthenticated" @submit.prevent="sendMessage">
                 <div class="flex space-x-2">
                     <input type="text" 
                            x-model="newMessage"
                            @keyup.enter="sendMessage"
                            placeholder="Escribe un mensaje..."
-                           class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-neon-blue"
-                           :disabled="!isAuthenticated">
+                           class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-neon-blue">
                     <button type="submit"
-                            :disabled="!isAuthenticated || !newMessage.trim()"
+                            :disabled="!newMessage.trim()"
                             class="px-4 py-2 bg-neon-blue text-gamer-dark text-sm font-bold rounded-lg hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed">
                         Enviar
                     </button>
                 </div>
-                
-                <!-- Mensaje para usuarios no registrados -->
-                <div x-show="!isAuthenticated" 
-                     class="mt-3 p-3 bg-gradient-to-r from-neon-purple/20 to-neon-blue/20 border border-neon-purple/30 rounded-lg text-center">
-                    <div class="flex items-center justify-center space-x-2 mb-2">
-                        <svg class="w-5 h-5 text-neon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                        </svg>
-                        <span class="text-sm font-bold text-white">🔒 Chat privado para miembros</span>
-                    </div>
-                    <p class="text-xs text-gray-300 mb-2">
-                        Únete a la conversación con otros miembros de Gamer Guild
-                    </p>
-                    <div class="flex space-x-2 justify-center">
-                        <a href="<?php echo e(route('login')); ?>" 
-                           class="px-3 py-1.5 bg-neon-blue text-gamer-dark text-xs font-bold rounded hover:scale-105 transition">
-                            Iniciar sesión
-                        </a>
-                        <a href="<?php echo e(route('register')); ?>" 
-                           class="px-3 py-1.5 bg-neon-purple text-white text-xs font-bold rounded hover:scale-105 transition">
-                            Registrarse
-                        </a>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-2">
-                        Puedes leer mensajes, pero necesitas cuenta para escribir
-                    </p>
-                </div>
-                
-                <!-- Mensaje para usuarios registrados -->
-                <div x-show="isAuthenticated" 
-                     class="mt-2 text-xs text-center text-gray-500">
+                <div class="mt-2 text-xs text-center text-gray-500">
                     <span class="text-neon-blue">✓</span> Conectado como <span x-text="userName" class="text-neon-blue font-bold"></span>
                 </div>
             </form>
+
+            <!-- USUARIOS NO AUTENTICADOS: solo lectura con invitación -->
+            <div x-show="!isAuthenticated" 
+                 class="p-4 bg-gradient-to-r from-neon-purple/20 to-neon-blue/20 border border-neon-purple/30 rounded-lg text-center">
+                <div class="flex items-center justify-center space-x-2 mb-3">
+                    <svg class="w-5 h-5 text-neon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                    <span class="text-sm font-bold text-white">🔒 Chat privado</span>
+                </div>
+                <p class="text-xs text-gray-300 mb-3">
+                    Los mensajes son solo para miembros registrados
+                </p>
+                <div class="flex space-x-2 justify-center mb-2">
+                    <a href="<?php echo e(route('login')); ?>" 
+                       class="px-3 py-1.5 bg-neon-blue text-gamer-dark text-xs font-bold rounded hover:scale-105 transition">
+                        Iniciar sesión
+                    </a>
+                    <a href="<?php echo e(route('register')); ?>" 
+                       class="px-3 py-1.5 bg-neon-purple text-white text-xs font-bold rounded hover:scale-105 transition">
+                        Registrarse
+                    </a>
+                </div>
+                <p class="text-xs text-gray-500">
+                    Puedes leer los mensajes, pero necesitas una cuenta para escribir
+                </p>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
+// Variable global para acceder a la instancia del chat
+let chatInstance = null;
+
 function floatingChat() {
     return {
         isOpen: false,
@@ -144,6 +147,8 @@ function floatingChat() {
         unreadCount: 0,
         
         init() {
+            // Guardar la instancia globalmente
+            chatInstance = this;
             this.loadMessages();
             // Actualizar cada 3 segundos
             setInterval(() => this.loadMessages(), 3000);
@@ -168,6 +173,10 @@ function floatingChat() {
                     this.messages = data;
                     if (this.isOpen) {
                         this.scrollToBottom();
+                    }
+                    // Incrementar contador de no leídos si hay nuevos mensajes y el chat está cerrado
+                    if (!this.isOpen && data.length > this.messages.length) {
+                        this.unreadCount++;
                     }
                 });
         },
@@ -202,5 +211,12 @@ function floatingChat() {
         }
     }
 }
-</script>
-<?php /**PATH C:\Users\Daniel\Documents\Prueba\Proyecto_final\laravel_shop\resources\views/components/floating-chat.blade.php ENDPATH**/ ?>
+
+// Función global para refrescar el chat desde cualquier parte
+window.refreshChat = function() {
+    if (chatInstance && typeof chatInstance.loadMessages === 'function') {
+        chatInstance.loadMessages();
+        console.log('Chat refrescado');
+    }
+};
+</script><?php /**PATH C:\Users\Daniel\Documents\Prueba\Proyecto_final\laravel_shop\resources\views/components/floating-chat.blade.php ENDPATH**/ ?>

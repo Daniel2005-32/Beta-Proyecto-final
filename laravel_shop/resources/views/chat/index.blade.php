@@ -6,7 +6,7 @@
                 <h1 class="text-4xl font-black text-white mb-2">
                     <span class="text-neon-purple">💬 Chat de la Comunidad</span>
                 </h1>
-                <p class="text-gray-400">Habla con otros miembros de Gamer Guild</p>
+                <p class="text-gray-400">Habla con otros miembros de Soul Guild</p>
             </div>
 
             <!-- Contenedor del chat -->

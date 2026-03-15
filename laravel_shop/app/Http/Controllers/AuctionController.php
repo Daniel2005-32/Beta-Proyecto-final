@@ -6,9 +6,21 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Helpers\PriceHelper;
 
 class AuctionController extends Controller
 {
+    /**
+     * Verificar si el usuario está baneado
+     */
+    private function checkBanned()
+    {
+        if (Auth::check() && Auth::user()->isBanned()) {
+            return redirect()->back()->with('error', 'No puedes realizar esta acción mientras estás baneado.');
+        }
+        return null;
+    }
+
     public function index()
     {
         // Finalizar subastas que han terminado
@@ -35,6 +47,12 @@ class AuctionController extends Controller
     {
         $product = Product::with('category', 'auctionWinner')->findOrFail($id);
         
+        // Si la subasta acaba de terminar, la finalizamos
+        if ($product->isAuctionEnded()) {
+            $product->endAuctionAndRemoveFromCatalog();
+            $product->refresh();
+        }
+        
         if (!$product->isAuctionActive() && !$product->isAuctionEnded()) {
             return redirect()->route('home')->with('error', 'Esta subasta no está activa');
         }
@@ -44,6 +62,10 @@ class AuctionController extends Controller
 
     public function confirm($id)
     {
+        // Verificar si el usuario está baneado
+        $check = $this->checkBanned();
+        if ($check) return $check;
+
         $product = Product::findOrFail($id);
         
         if (!$product->is_exclusive || $product->stock != 1) {
@@ -56,6 +78,10 @@ class AuctionController extends Controller
 
     public function bid(Request $request, $id)
     {
+        // Verificar si el usuario está baneado
+        $check = $this->checkBanned();
+        if ($check) return $check;
+
         $request->validate([
             'amount' => 'required|numeric|min:0.01'
         ]);
@@ -70,14 +96,19 @@ class AuctionController extends Controller
             return redirect()->route('login')->with('error', 'Debes iniciar sesión para pujar');
         }
         
+        // SIN IVA - Precio actual en BD (sin impuestos)
         $currentBid = $product->price;
         
-        if ($request->amount <= $currentBid) {
-            return back()->with('error', "La puja debe ser mayor a " . number_format($currentBid, 2) . "€");
+        // La puja del usuario también es sin IVA
+        $bidAmount = $request->amount;
+        
+        if ($bidAmount <= $currentBid) {
+            $minBid = number_format($currentBid + 0.01, 2);
+            return back()->with('error', "La puja debe ser mayor a {$minBid}€");
         }
         
-        // Actualizar el precio y el ganador
-        $product->price = $request->amount;
+        // Actualizar el precio en BD (sin IVA)
+        $product->price = $bidAmount;
         $product->auction_winner_id = Auth::id();
         $product->save();
         
@@ -86,6 +117,10 @@ class AuctionController extends Controller
 
     public function start(Request $request, $id)
     {
+        // Verificar si el usuario está baneado
+        $check = $this->checkBanned();
+        if ($check) return $check;
+
         $product = Product::findOrFail($id);
         
         if (!$product->is_exclusive || $product->stock != 1) {
@@ -110,6 +145,10 @@ class AuctionController extends Controller
 
     public function claimPrize($id)
     {
+        // Verificar si el usuario está baneado
+        $check = $this->checkBanned();
+        if ($check) return $check;
+
         $product = Product::findOrFail($id);
         
         if (!Auth::check() || Auth::id() != $product->auction_winner_id) {
@@ -128,12 +167,11 @@ class AuctionController extends Controller
     }
 
     // ============================================
-    // MÉTODOS PARA ADMINISTRADORES (CORREGIDOS)
+    // MÉTODOS PARA ADMINISTRADORES (no requieren verificación de baneo)
     // ============================================
     
     public function extendAuction(Request $request, $id)
     {
-        // Verificar que es admin
         if (!auth()->check() || !auth()->user()->is_admin) {
             abort(403, 'Acceso no autorizado');
         }
@@ -148,10 +186,7 @@ class AuctionController extends Controller
             return back()->with('error', 'Este producto no está en subasta');
         }
         
-        // Convertir a entero explícitamente
         $hours = (int) $request->hours;
-        
-        // Extender el tiempo
         $newEndTime = Carbon::parse($product->auction_end_time)->addHours($hours);
         $product->auction_end_time = $newEndTime;
         $product->save();
@@ -161,7 +196,6 @@ class AuctionController extends Controller
     
     public function reduceAuction(Request $request, $id)
     {
-        // Verificar que es admin
         if (!auth()->check() || !auth()->user()->is_admin) {
             abort(403, 'Acceso no autorizado');
         }
@@ -176,13 +210,9 @@ class AuctionController extends Controller
             return back()->with('error', 'Este producto no está en subasta');
         }
         
-        // Convertir a entero explícitamente
         $hours = (int) $request->hours;
-        
-        // Reducir el tiempo
         $newEndTime = Carbon::parse($product->auction_end_time)->subHours($hours);
         
-        // No permitir reducir por debajo del tiempo actual
         if ($newEndTime < Carbon::now()) {
             return back()->with('error', '❌ No puedes reducir la subasta por debajo del tiempo actual');
         }
@@ -195,7 +225,6 @@ class AuctionController extends Controller
     
     public function resetAuctionTime(Request $request, $id)
     {
-        // Verificar que es admin
         if (!auth()->check() || !auth()->user()->is_admin) {
             abort(403, 'Acceso no autorizado');
         }
@@ -206,7 +235,6 @@ class AuctionController extends Controller
             return back()->with('error', 'Este producto no está en subasta');
         }
         
-        // Resetear a 24 horas desde ahora
         $product->auction_end_time = Carbon::now()->addHours(24);
         $product->save();
         
@@ -215,7 +243,6 @@ class AuctionController extends Controller
     
     public function forceEndAuction($id)
     {
-        // Verificar que es admin
         if (!auth()->check() || !auth()->user()->is_admin) {
             abort(403, 'Acceso no autorizado');
         }
@@ -233,4 +260,3 @@ class AuctionController extends Controller
         return back()->with('success', '✅ Subasta finalizada forzosamente');
     }
 }
-

@@ -1,6 +1,7 @@
 <x-store-layout>
     <div class="py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Mismo ancho que la página principal -->
+        <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8">
             <!-- Botón para volver al catálogo normal -->
             <div class="mb-6">
                 <a href="{{ route('products.index') }}" class="inline-flex items-center text-gray-400 hover:text-neon-blue transition group">
@@ -38,8 +39,8 @@
                 </div>
             @endif
 
-            <!-- Grid de productos -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <!-- Grid de productos - 5 columnas -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 @forelse($products as $product)
                     @include('products.partials.product-card', ['product' => $product])
                 @empty

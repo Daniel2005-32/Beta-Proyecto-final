@@ -1,7 +1,7 @@
 -- ============================================================
 -- ARCHIVO: tienda_gamer_guild.sql
 -- DESCRIPCIÓN: Script completo para crear y poblar la base de datos
---              de la tienda Gamer Guild con categorías fusionadas
+--              de la tienda Soul Guild con categorías fusionadas
 -- FECHA: 2026-02-25
 -- ============================================================
 
@@ -383,4 +383,4 @@ WHERE p.trending = 1;
 -- ============================================================
 -- FIN DEL SCRIPT
 -- ============================================================
-SELECT '🎮 ¡BASE DE DATOS DE GAMER GUILD CREADA CORRECTAMENTE! 🎮' as '';
+SELECT '🎮 ¡BASE DE DATOS DE Soul GUILD CREADA CORRECTAMENTE! 🎮' as '';

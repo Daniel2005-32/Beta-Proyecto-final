@@ -97,4 +97,73 @@ class User extends Authenticatable
             })
             ->update(['banned_until' => Carbon::now()]);
     }
+
+     /**
+     * Verificar si es super admin
+     */
+    public function isSuperAdmin()
+    {
+        return $this->is_super_admin ?? false;
+    }
+
+    /**
+     * Verificar si se puede modificar este usuario
+     */
+    public function canBeModifiedBy($user)
+    {
+        // Super admin no puede ser modificado por nadie
+        if ($this->isSuperAdmin()) {
+            return false;
+        }
+        
+        // Un admin no puede modificar a otro admin (solo super admin)
+        if ($this->is_admin && !$user->isSuperAdmin()) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    /**
+     * Verificar si se puede eliminar este usuario
+     */
+    public function canBeDeletedBy($user)
+    {
+        // Super admin no puede ser eliminado
+        if ($this->isSuperAdmin()) {
+            return false;
+        }
+        
+        // Un admin no puede eliminar a otro admin (solo super admin)
+        if ($this->is_admin && !$user->isSuperAdmin()) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    /**
+     * Relación con pedidos
+     */
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    /**
+     * Relación con subastas ganadas
+     */
+    public function wonAuctions()
+    {
+        return $this->hasMany(Product::class, 'auction_winner_id');
+    }
+
+    /**
+     * Relación con sorteos ganados
+     */
+    public function wonRaffles()
+    {
+        return $this->hasMany(Raffle::class, 'winner_id');
+    }
+
 }

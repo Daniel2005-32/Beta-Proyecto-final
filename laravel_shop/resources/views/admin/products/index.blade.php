@@ -6,103 +6,28 @@
                     <h1 class="text-4xl font-black text-white mb-2">
                         <span class="text-neon-blue">📦 Gestión de Productos</span>
                     </h1>
-                    <p class="text-gray-400">Administra todos los productos de la tienda</p>
+                    <p class="text-gray-400">Administra el catálogo de productos</p>
                 </div>
-                <a href="{{ route('admin.products.create') }}" class="px-6 py-3 bg-neon-blue text-gamer-dark font-bold rounded-lg hover:scale-105 transition">
-                    + Nuevo Producto
-                </a>
-            </div>
-
-            @if(session('success'))
-                <div class="bg-green-900/50 border border-green-500 text-green-200 px-4 py-3 rounded-lg mb-6">
-                    {{ session('success') }}
+                <div class="flex space-x-4">
+                    <a href="{{ route('admin.orders.index') }}" class="px-4 py-2 bg-neon-purple/10 text-neon-purple rounded-lg hover:bg-neon-purple hover:text-white transition flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                        Ver Pedidos
+                    </a>
+                    <a href="{{ route('admin.reviews.index') }}" class="px-4 py-2 bg-yellow-600/10 text-yellow-500 rounded-lg hover:bg-yellow-600 hover:text-white transition flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                        </svg>
+                        Ver Valoraciones
+                    </a>
+                    <a href="{{ route('admin.products.create') }}" class="px-6 py-2 bg-neon-blue text-gamer-dark font-bold rounded-lg hover:scale-105 transition shadow-[0_0_20px_rgba(0,210,255,0.4)]">
+                        + Nuevo Producto
+                    </a>
                 </div>
-            @endif
-
-            <div class="bg-gamer-card rounded-2xl border border-neon-blue/20 overflow-hidden">
-                <table class="w-full">
-                    <thead class="bg-gray-800 border-b border-neon-blue/20">
-                        <tr>
-                            <th class="px-6 py-4 text-left text-neon-blue">ID</th>
-                            <th class="px-6 py-4 text-left text-neon-blue">Imagen</th>
-                            <th class="px-6 py-4 text-left text-neon-blue">Producto</th>
-                            <th class="px-6 py-4 text-left text-neon-blue">Categoría</th>
-                            <th class="px-6 py-4 text-left text-neon-blue">Precio</th>
-                            <th class="px-6 py-4 text-left text-neon-blue">Stock</th>
-                            <th class="px-6 py-4 text-left text-neon-blue">Características</th>
-                            <th class="px-6 py-4 text-left text-neon-blue">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($products as $product)
-                            <tr class="border-b border-gray-800 hover:bg-gray-800/50 transition">
-                                <td class="px-6 py-4 text-gray-300">{{ $product->id }}</td>
-                                <td class="px-6 py-4">
-                                    <img src="{{ $product->image }}" alt="" class="w-12 h-12 object-cover rounded">
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="text-white font-medium">{{ $product->name }}</span>
-                                </td>
-                                <td class="px-6 py-4 text-gray-300">{{ $product->category->name }}</td>
-                                <td class="px-6 py-4">
-                                    @if($product->original_price && $product->original_price > $product->price)
-                                        <div>
-                                            <span class="text-neon-red font-bold">{{ number_format($product->price, 2) }}€</span>
-                                            <span class="text-gray-500 line-through text-sm ml-1">{{ number_format($product->original_price, 2) }}€</span>
-                                        </div>
-                                    @else
-                                        <span class="text-white">{{ number_format($product->price, 2) }}€</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="px-3 py-1 rounded-full text-sm 
-                                        {{ $product->stock > 5 ? 'bg-green-900/50 text-green-300' : 
-                                           ($product->stock > 0 ? 'bg-yellow-900/50 text-yellow-300' : 'bg-red-900/50 text-red-300') }}">
-                                        {{ $product->stock }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex space-x-1">
-                                        @if($product->featured)
-                                            <span class="px-2 py-0.5 bg-neon-blue/20 text-neon-blue rounded text-xs">Destacado</span>
-                                        @endif
-                                        @if($product->trending)
-                                            <span class="px-2 py-0.5 bg-neon-purple/20 text-neon-purple rounded text-xs">Trending</span>
-                                        @endif
-                                        @if($product->is_exclusive)
-                                            <span class="px-2 py-0.5 bg-neon-red/20 text-neon-red rounded text-xs">Exclusivo</span>
-                                        @endif
-                                        @if($product->original_price && $product->original_price > $product->price)
-                                            <span class="px-2 py-0.5 bg-neon-blue/20 text-neon-blue rounded text-xs">Oferta</span>
-                                        @endif
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex space-x-2">
-                                        <a href="{{ route('admin.products.edit', $product) }}" 
-                                           class="px-3 py-1 bg-neon-blue/10 text-neon-blue rounded-lg hover:bg-neon-blue hover:text-gamer-dark transition text-sm">
-                                            Editar
-                                        </a>
-                                        <form action="{{ route('admin.products.destroy', $product) }}" 
-                                              method="POST" 
-                                              onsubmit="return confirm('¿Eliminar producto?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="px-3 py-1 bg-neon-red/10 text-neon-red rounded-lg hover:bg-neon-red hover:text-white transition text-sm">
-                                                Eliminar
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
             </div>
 
-            <div class="mt-6">
-                {{ $products->links() }}
-            </div>
+            @include('admin.products.partials.list')
         </div>
     </div>
 </x-store-layout>

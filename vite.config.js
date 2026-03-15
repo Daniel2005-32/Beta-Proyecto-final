@@ -5,6 +5,9 @@ export default defineConfig({
   plugins: [vue()],
   server: {
     host: '0.0.0.0',  // IMPORTANTE para Docker
+    allowedHosts: [
+      'proyecto-final-desplegar.onrender.com'
+    ],
     port: 5173,
     strictPort: true,
     watch: {

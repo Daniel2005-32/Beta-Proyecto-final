@@ -43,12 +43,8 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
 Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::resource('users', App\Http\Controllers\Admin\UserController::class);
     Route::post('users/{user}/toggle-admin', [App\Http\Controllers\Admin\UserController::class, 'toggleAdmin'])->name('users.toggle-admin');
-});
-
-// Admin routes - Baneos
-Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
-    Route::resource('bans', App\Http\Controllers\Admin\BanController::class);
-    Route::post('bans/unban/{user}', [App\Http\Controllers\Admin\BanController::class, 'unban'])->name('bans.unban');
+    Route::post('users/{user}/ban', [App\Http\Controllers\Admin\UserController::class, 'ban'])->name('users.ban');
+    Route::post('users/{user}/unban', [App\Http\Controllers\Admin\UserController::class, 'unban'])->name('users.unban');
 });
 
 // Admin routes - Sorteos
@@ -58,17 +54,41 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::post('raffles/{raffle}/draw', [App\Http\Controllers\Admin\RaffleController::class, 'drawWinner'])->name('raffles.draw');
 });
 
-// Ruta para limpiar mensajes manualmente (solo admins)
-Route::get('/admin/clean-messages', function() {
+// Admin routes - Pedidos
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+    Route::resource('orders', App\Http\Controllers\Admin\OrderController::class)->except(['create', 'store', 'edit']);
+    Route::post('orders/{order}/status', [App\Http\Controllers\Admin\OrderController::class, 'updateStatus'])->name('orders.update-status');
+});
+
+// Admin routes - Valoraciones
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+    Route::resource('reviews', App\Http\Controllers\Admin\ReviewController::class)->only(['index', 'destroy']);
+    Route::post('reviews/{review}/approve', [App\Http\Controllers\Admin\ReviewController::class, 'approve'])->name('reviews.approve');
+});
+
+// Ruta para limpiar mensajes - AHORA LIMPIA LA TABLA 'messages'
+Route::post('/admin/clean-messages', function() {
     if (!auth()->check() || !auth()->user()->is_admin) {
-        abort(403, 'Solo administradores');
+        return response()->json(['success' => false, 'error' => 'No autorizado'], 403);
     }
     
-    $deleted = \Illuminate\Support\Facades\Artisan::call('messages:delete-old --hours=1');
-    
-    return redirect()->back()->with('success', "Mensajes antiguos eliminados correctamente.");
-})->name('admin.clean.messages')->middleware('auth');
-
+    try {
+        // Limpiar la tabla 'messages' que es donde están los mensajes
+        $count = DB::table('messages')->count();
+        DB::table('messages')->truncate();
+        
+        return response()->json([
+            'success' => true,
+            'deleted' => $count,
+            'message' => "✅ $count mensajes eliminados"
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false, 
+            'error' => '❌ Error: ' . $e->getMessage()
+        ], 500);
+    }
+})->name('admin.clean-messages')->middleware('auth');
 // ============================================
 // RUTAS DE SUBASTAS
 // ============================================
@@ -134,10 +154,8 @@ Route::middleware(['auth'])->prefix('profile')->name('profile.')->group(function
 });
 
 // ============================================
-// RUTAS DE OFERTAS Y CONTACTO (CORREGIDAS)
+// RUTAS DE OFERTAS Y CONTACTO
 // ============================================
-
-// Ruta de ofertas
 Route::get('/ofertas', function () {
     $offers = App\Models\Product::where('original_price', '>', 0)
         ->whereColumn('price', '<', 'original_price')
@@ -147,9 +165,7 @@ Route::get('/ofertas', function () {
     return view('offers', compact('offers'));
 })->name('offers');
 
-// Ruta de contacto - CORREGIDA para aceptar GET y POST
 Route::match(['get', 'post'], '/contacto', function () {
-    // Si es POST, procesamos el formulario
     if (request()->isMethod('post')) {
         $data = request()->validate([
             'name' => 'required|string|max:255',
@@ -157,15 +173,32 @@ Route::match(['get', 'post'], '/contacto', function () {
             'message' => 'required|string|max:1000',
         ]);
         
-        // Aquí puedes enviar un email o guardar en BD
-        // Por ahora solo mostramos un mensaje de éxito
-        
         return redirect()->back()->with('success', '¡Mensaje enviado correctamente! Te responderemos pronto.');
     }
     
-    // Si es GET, mostramos el formulario
     return view('contact');
 })->name('contact');
+
+// ============================================
+// RUTAS DE VALORACIONES (PÚBLICAS)
+// ============================================
+Route::get('/products/{product}/reviews', function(App\Models\Product $product) {
+    return response()->json([
+        'reviews' => $product->approvedReviews()->with('user')->latest()->get()
+    ]);
+})->name('products.reviews');
+
+Route::post('/products/{product}/reviews', [App\Http\Controllers\ProductReviewController::class, 'store'])
+    ->name('products.reviews.store')
+    ->middleware('auth');
+
+Route::put('/reviews/{review}', [App\Http\Controllers\ProductReviewController::class, 'update'])
+    ->name('reviews.update')
+    ->middleware('auth');
+
+Route::delete('/reviews/{review}', [App\Http\Controllers\ProductReviewController::class, 'destroy'])
+    ->name('reviews.destroy')
+    ->middleware('auth');
 
 // ============================================
 // RUTAS DE CARRITO Y PEDIDOS
@@ -177,6 +210,12 @@ Route::post('/cart/remove/{id}', [OrderController::class, 'removeFromCart'])->na
 Route::post('/cart/clear', [OrderController::class, 'clearCart'])->name('cart.clear')->middleware('auth');
 Route::get('/checkout', [OrderController::class, 'checkoutForm'])->name('cart.checkout.form')->middleware('auth');
 Route::post('/checkout', [OrderController::class, 'checkout'])->name('cart.checkout')->middleware('auth');
+
+// ============================================
+// RUTAS DE BÚSQUEDA
+// ============================================
+Route::get('/buscar', [App\Http\Controllers\SearchController::class, 'search'])->name('search');
+Route::get('/buscar/sugerencias', [App\Http\Controllers\SearchController::class, 'suggestions'])->name('search.suggestions');
 
 // ============================================
 // RUTAS DE PEDIDOS

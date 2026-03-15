@@ -16,13 +16,17 @@
                 </p>
                 
                 <div class="bg-gray-800/50 rounded-lg p-4 mb-8">
+                    @php
+                        $originalPrice = $product->price;
+                        $startingPrice = $originalPrice * 0.8; // 20% de descuento
+                    @endphp
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-gray-400">Precio original:</span>
-                        <span class="text-white line-through">{{ number_format($product->price, 2) }}€</span>
+                        <span class="text-white line-through">{{ number_format($originalPrice, 2) }}€</span>
                     </div>
                     <div class="flex justify-between items-center text-lg font-bold">
                         <span class="text-gray-300">Precio de salida:</span>
-                        <span class="text-neon-purple">{{ number_format($product->price * 0.8, 2) }}€</span>
+                        <span class="text-neon-purple">{{ number_format($startingPrice, 2) }}€</span>
                     </div>
                     <div class="text-sm text-gray-500 mt-2">
                         * Los usuarios podrán pujar durante 24 horas
@@ -38,8 +42,7 @@
                         </button>
                     </form>
                     
-                    <form action="{{ route('auctions.cancel', $product->
-id) }}" method="POST">
+                    <form action="{{ route('auctions.cancel', $product->id) }}" method="POST">
                         @csrf
                         <button type="submit" 
                                 class="w-full sm:w-auto px-8 py-4 bg-gray-800 text-gray-300 font-black rounded-full hover:bg-gray-700 transition">

@@ -1,15 +1,13 @@
 <x-store-layout>
     <div class="py-12">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Cabecera -->
             <div class="mb-8">
                 <h1 class="text-4xl font-black text-white mb-2">
-                    <span class="text-neon-blue">👤 Mi Perfil</span>
+                    <span class="text-neon-purple">👤 Mi Perfil</span>
                 </h1>
-                <p class="text-gray-400">Gestiona tu información personal</p>
+                <p class="text-gray-400">Bienvenido de nuevo, {{ Auth::user()->name }}</p>
             </div>
 
-            <!-- Mensajes de éxito/error -->
             @if(session('success'))
                 <div class="bg-green-900/50 border border-green-500 text-green-200 px-4 py-3 rounded-lg mb-6">
                     {{ session('success') }}
@@ -22,145 +20,341 @@
                 </div>
             @endif
 
-            <!-- Grid de información -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Columna izquierda - Avatar -->
-                <div class="bg-gamer-card rounded-2xl border border-neon-blue/20 p-6">
-                    <div class="flex flex-col items-center">
-                        <div class="w-32 h-32 rounded-full bg-gradient-to-br from-neon-blue to-neon-purple mb-4 flex items-center justify-center overflow-hidden">
-                            @if($user->avatar)
-                                <img src="{{ asset('avatars/' . $user->avatar) }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
-                            @else
-                                <span class="text-5xl text-white font-black">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
-                            @endif
-                        </div>
-                        <h2 class="text-xl font-bold text-white mb-1">{{ $user->name }}</h2>
-                        <p class="text-gray-400 text-sm mb-4">{{ $user->email }}</p>
-                        
-                        <!-- Formulario para subir avatar -->
-                        <form action="{{ route('profile.avatar') }}" method="POST" enctype="multipart/form-data" class="w-full">
-                            @csrf
-                            <label class="block mb-2 text-sm text-gray-400">Cambiar avatar</label>
-                            <input type="file" name="avatar" accept="image/*" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-neon-blue file:text-gamer-dark hover:file:bg-neon-blue/80">
-                            <button type="submit" class="w-full mt-3 px-4 py-2 bg-neon-purple/20 text-neon-purple text-sm font-bold rounded-lg hover:bg-neon-purple hover:text-white transition">
-                                Subir avatar
-                            </button>
-                        </form>
+            <!-- Información personal - Fondo azul oscuro -->
+            <div class="bg-gradient-to-br from-blue-900/30 to-blue-950/50 rounded-2xl border border-neon-blue/30 p-8 mb-8 backdrop-blur-sm">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-neon-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                    Información personal
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-1">Nombre</label>
+                        <p class="text-white text-lg font-bold">{{ Auth::user()->name }}</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-1">Email</label>
+                        <p class="text-white text-lg">{{ Auth::user()->email }}</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-1">Miembro desde</label>
+                        <p class="text-white">{{ Auth::user()->created_at->format('d/m/Y') }}</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-1">Rol</label>
+                        @if(Auth::user()->isSuperAdmin())
+                            <p class="text-neon-red font-bold">Super Administrador</p>
+                        @elseif(Auth::user()->is_admin)
+                            <p class="text-neon-blue font-bold">Administrador</p>
+                        @else
+                            <p class="text-gray-300">Usuario</p>
+                        @endif
                     </div>
                 </div>
+                
+                <div class="mt-6">
+                    <a href="{{ route('profile.edit') }}" class="px-6 py-2 bg-neon-blue text-gamer-dark font-bold rounded-lg hover:scale-105 transition inline-flex items-center gap-2 shadow-[0_0_15px_rgba(0,210,255,0.3)]">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                        </svg>
+                        Editar perfil
+                    </a>
+                </div>
+            </div>
+            
 
-                <!-- Columna derecha - Información y acciones -->
-                <div class="md:col-span-2 space-y-6">
-                    <!-- Información personal -->
-                    <div class="bg-gamer-card rounded-2xl border border-neon-blue/20 p-6">
-                        <h3 class="text-xl font-bold text-white mb-4">Información personal</h3>
-                        
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between pb-3 border-b border-gray-800">
-                                <span class="text-gray-400">Nombre</span>
-                                <span class="text-white font-medium">{{ $user->name }}</span>
-                            </div>
-                            <div class="flex items-center justify-between pb-3 border-b border-gray-800">
-                                <span class="text-gray-400">Email</span>
-                                <span class="text-white font-medium">{{ $user->email }}</span>
-                            </div>
-                            <div class="flex items-center justify-between pb-3 border-b border-gray-800">
-                                <span class="text-gray-400">Miembro desde</span>
-                                <span class="text-white font-medium">{{ $user->created_at->format('d/m/Y') }}</span>
-                            </div>
-                            @if($user->is_admin)
-                                <div class="flex items-center justify-between">
-                                    <span class="text-gray-400">Rol</span>
-                                    <span class="text-neon-purple font-bold">👑 Administrador</span>
+            <!-- Subastas ganadas - Fondo morado oscuro -->
+            <div class="bg-gradient-to-br from-purple-900/30 to-purple-950/50 rounded-2xl border border-neon-purple/30 p-8 mb-8 backdrop-blur-sm">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-neon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Subastas ganadas
+                </h2>
+                
+                @php
+                    $wonAuctions = Auth::user()->wonAuctions()
+                        ->where('auction_claimed', false)
+                        ->orderBy('auction_end_time', 'desc')
+                        ->get();
+                @endphp
+                
+                @if($wonAuctions->count() > 0)
+                    <div class="space-y-4">
+                        @foreach($wonAuctions as $auction)
+                            <div class="bg-gray-800/50 rounded-lg p-4 flex justify-between items-center border border-gray-700 hover:border-neon-purple/50 transition">
+                                <div class="flex items-center space-x-4">
+                                    <img src="{{ $auction->image }}" alt="{{ $auction->name }}" class="w-16 h-16 object-cover rounded-lg">
+                                    <div>
+                                        <h3 class="text-white font-bold">{{ $auction->name }}</h3>
+                                        <p class="text-gray-400 text-sm">
+                                            Ganada el {{ $auction->auction_end_time ? $auction->auction_end_time->format('d/m/Y') : 'Fecha no disponible' }}
+                                        </p>
+                                        <p class="text-neon-purple font-bold">{{ number_format($auction->auction_final_price ?? $auction->price, 2) }}€</p>
+                                    </div>
                                 </div>
-                            @endif
-                        </div>
-
-                        <div class="mt-6">
-                            <a href="{{ route('profile.edit') }}" class="inline-block px-6 py-3 bg-neon-blue text-gamer-dark font-bold rounded-lg hover:scale-105 transition shadow-[0_0_20px_rgba(0,210,255,0.4)]">
-                                Editar perfil
-                            </a>
-                        </div>
+                                <a href="{{ route('products.show', $auction->slug) }}" 
+                                   class="px-4 py-2 bg-neon-purple text-white rounded-lg hover:bg-neon-purple/80 transition text-sm shadow-[0_0_15px_rgba(157,0,255,0.3)]">
+                                    Ver producto
+                                </a>
+                            </div>
+                        @endforeach
                     </div>
+                @else
+                    <div class="text-center py-8 bg-gray-800/30 rounded-lg">
+                        <svg class="w-12 h-12 text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-gray-400">No has ganado ninguna subasta aún</p>
+                        <a href="{{ route('auctions.index') }}" class="inline-block mt-3 text-neon-purple hover:underline">
+                            Ver subastas activas
+                        </a>
+                    </div>
+                @endif
+            </div>
 
-                    <!-- SUBASTAS GANADAS -->
-                    @php
-                        $wonAuctions = App\Models\Product::where('auction_winner_id', $user->id)
-                            ->where('auction_claimed', false)
-                            ->get();
-                        $claimedAuctions = App\Models\Product::where('auction_winner_id', $user->id)
-                            ->where('auction_claimed', true)
-                            ->get();
-                    @endphp
-
-                    @if($wonAuctions->count() > 0)
-                        <div class="bg-gamer-card rounded-2xl border border-neon-purple/30 p-6">
-                            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                                <svg class="w-6 h-6 text-neon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                🏆 Subastas ganadas pendientes
-                            </h3>
-                            
-                            <div class="space-y-4">
-                                @foreach($wonAuctions as $auction)
-                                    <div class="bg-gray-800/50 rounded-lg p-4 flex items-center justify-between">
-                                        <div class="flex items-center space-x-3">
-                                            <img src="{{ $auction->image }}" alt="{{ $auction->name }}" class="w-12 h-12 object-cover rounded">
-                                            <div>
-                                                <h4 class="text-white font-bold">{{ $auction->name }}</h4>
-                                                <p class="text-sm text-gray-400">Precio final: {{ number_format($auction->price, 2) }}€</p>
-                                            </div>
+            <!-- Sorteos ganados - Fondo rojo oscuro -->
+            <div class="bg-gradient-to-br from-red-900/30 to-red-950/50 rounded-2xl border border-neon-red/30 p-8 mb-8 backdrop-blur-sm">
+                <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-neon-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 11.5v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 9v6m0 0l-3-3m3 3l3-3M3 3h18v6H3V3z"></path>
+                    </svg>
+                    Sorteos ganados
+                </h2>
+                
+                @php
+                    $wonRaffles = Auth::user()->wonRaffles()
+                        ->orderBy('draw_date', 'desc')
+                        ->get();
+                @endphp
+                
+                @if($wonRaffles->count() > 0)
+                    <div class="space-y-4">
+                        @foreach($wonRaffles as $raffle)
+                            @php
+                                $product = $raffle->getProduct();
+                            @endphp
+                            <div class="bg-gray-800/50 rounded-lg p-4 flex justify-between items-center border border-gray-700 hover:border-neon-red/50 transition">
+                                <div class="flex items-center space-x-4">
+                                    @if($product)
+                                        <img src="{{ $product->image }}" alt="{{ $product->name }}" class="w-16 h-16 object-cover rounded-lg">
+                                    @else
+                                        <div class="w-16 h-16 bg-gray-700 rounded-lg flex items-center justify-center">
+                                            <svg class="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                            </svg>
                                         </div>
-                                        <form action="{{ route('auctions.claim', $auction->id) }}" method="POST">
+                                    @endif
+                                    <div>
+                                        <h3 class="text-white font-bold">{{ $raffle->title }}</h3>
+                                        <p class="text-gray-400 text-sm">Sorteado el {{ $raffle->draw_date->format('d/m/Y') }}</p>
+                                        @if($product)
+                                            <p class="text-neon-red font-bold">{{ $product->name }}</p>
+                                        @endif
+                                    </div>
+                                </div>
+                                @if($product)
+                                    <a href="{{ route('products.show', $product->slug) }}" 
+                                       class="px-4 py-2 bg-neon-red text-white rounded-lg hover:bg-neon-red/80 transition text-sm shadow-[0_0_15px_rgba(255,0,85,0.3)]">
+                                        Ver premio
+                                    </a>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-8 bg-gray-800/30 rounded-lg">
+                        <svg class="w-12 h-12 text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 11.5v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 9v6m0 0l-3-3m3 3l3-3M3 3h18v6H3V3z"></path>
+                        </svg>
+                        <p class="text-gray-400">No has ganado ningún sorteo aún</p>
+                        <a href="{{ route('raffles.index') }}" class="inline-block mt-3 text-neon-red hover:underline">
+                            Ver sorteos activos
+                        </a>
+                    </div>
+                @endif
+            </div>
+
+            <!-- Historial de pedidos - Fondo verde oscuro con ACORDEONES -->
+            <div id="pedidos" class="bg-gradient-to-br from-green-900/30 to-green-950/50 rounded-2xl border border-green-500/30 p-8 mb-8 backdrop-blur-sm scroll-mt-24">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                        <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                        📦 Mis pedidos
+                    </h2>
+                    @php
+                        $ordersCount = Auth::user()->orders()->count();
+                    @endphp
+                    <span class="text-gray-400 text-sm">Total: {{ $ordersCount }} pedidos</span>
+                </div>
+                
+                @php
+                    $orders = Auth::user()->orders()
+                        ->with('items.product')
+                        ->orderBy('created_at', 'desc')
+                        ->get();
+                @endphp
+                
+                @if($orders->count() > 0)
+                    <div class="space-y-3" x-data="{ openOrder: null }">
+                        @foreach($orders as $index => $order)
+                            <div class="bg-gray-800/50 rounded-lg border border-gray-700 overflow-hidden">
+                                <!-- CABECERA DEL PEDIDO (SIEMPRE VISIBLE) -->
+                                <div class="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-700/50 transition"
+                                     @click="openOrder = openOrder === {{ $index }} ? null : {{ $index }}">
+                                    <div class="flex items-center gap-4 flex-wrap">
+                                        <span class="text-green-500 font-bold">Pedido #{{ $order->id }}</span>
+                                        <span class="text-gray-400 text-sm">{{ $order->created_at->format('d/m/Y') }}</span>
+                                        @if($order->status == 'pending')
+                                            <span class="px-2 py-0.5 bg-yellow-600/20 text-yellow-400 rounded-full text-xs">Pendiente</span>
+                                        @elseif($order->status == 'completed')
+                                            <span class="px-2 py-0.5 bg-green-600/20 text-green-400 rounded-full text-xs">Completado</span>
+                                        @else
+                                            <span class="px-2 py-0.5 bg-red-600/20 text-red-400 rounded-full text-xs">Cancelado</span>
+                                        @endif
+                                        <span class="text-white font-bold">{{ number_format($order->total, 2) }}€</span>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <a href="{{ route('orders.show', $order) }}" 
+                                           class="text-sm text-green-500 hover:text-green-400 transition">
+                                            Detalles
+                                        </a>
+                                        <svg class="w-5 h-5 text-gray-400 transition-transform duration-300"
+                                             :class="{ 'rotate-180': openOrder === {{ $index }} }"
+                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                
+                                <!-- DETALLE DEL PEDIDO (DESPLEGABLE) -->
+                                <div x-show="openOrder === {{ $index }}"
+                                     x-transition:enter="transition ease-out duration-300"
+                                     x-transition:enter-start="opacity-0 -translate-y-2"
+                                     x-transition:enter-end="opacity-100 translate-y-0"
+                                     x-transition:leave="transition ease-in duration-200"
+                                     x-transition:leave-start="opacity-100 translate-y-0"
+                                     x-transition:leave-end="opacity-0 -translate-y-2"
+                                     class="border-t border-gray-700 p-4 bg-gray-800/80">
+                                    
+                                    <!-- Productos del pedido -->
+                                    <div class="space-y-3 mb-4">
+                                        <h4 class="text-sm font-bold text-gray-300 mb-2">Productos:</h4>
+                                        @foreach($order->items as $item)
+                                            <div class="flex items-center gap-3 text-sm">
+                                                @if($item->product)
+                                                    <img src="{{ $item->product->image }}" alt="{{ $item->product->name }}" class="w-12 h-12 object-cover rounded">
+                                                    <div class="flex-1">
+                                                        <span class="text-white">{{ $item->product->name }}</span>
+                                                        <span class="text-gray-400 text-xs block">Cantidad: {{ $item->quantity }}</span>
+                                                    </div>
+                                                @else
+                                                    <div class="w-12 h-12 bg-gray-700 rounded flex items-center justify-center">
+                                                        <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                                        </svg>
+                                                    </div>
+                                                @endif
+                                                <span class="text-green-500 font-bold">{{ number_format($item->price * $item->quantity, 2) }}€</span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    
+                                    <!-- Información adicional del pedido -->
+                                    <div class="grid grid-cols-2 gap-4 text-sm pt-3 border-t border-gray-700">
+                                        <div>
+                                            <span class="text-gray-400 block">Fecha completa:</span>
+                                            <span class="text-white">{{ $order->created_at->format('d/m/Y H:i') }}</span>
+                                        </div>
+                                        @if($order->address)
+                                        <div>
+                                            <span class="text-gray-400 block">Dirección:</span>
+                                            <span class="text-white">{{ $order->address->name }}</span>
+                                        </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-8 bg-gray-800/30 rounded-lg">
+                        <svg class="w-12 h-12 text-gray-600 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                        <p class="text-gray-400">No has realizado ningún pedido aún</p>
+                        <a href="{{ route('products.index') }}" class="inline-block mt-3 text-green-500 hover:underline">
+                            Comprar ahora
+                        </a>
+                    </div>
+                @endif
+            </div>
+
+            <!-- Direcciones - Fondo neutro (gris) -->
+            <div class="bg-gradient-to-br from-gray-800/80 to-gray-900/90 rounded-2xl border border-gray-700 p-8 backdrop-blur-sm">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Direcciones
+                    </h2>
+                    <a href="{{ route('addresses.create') }}" class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition text-sm">
+                        + Nueva dirección
+                    </a>
+                </div>
+                
+                @php
+                    $addresses = App\Models\Address::where('user_id', Auth::id())->get();
+                @endphp
+                
+                @if($addresses->count() > 0)
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @foreach($addresses as $address)
+                            <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-700 {{ $address->is_default ? 'border-gray-500' : '' }}">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 class="text-white font-bold">{{ $address->name }}</h3>
+                                    @if($address->is_default)
+                                        <span class="text-gray-400 text-xs font-bold">PREDETERMINADA</span>
+                                    @endif
+                                </div>
+                                <p class="text-gray-400 text-sm">{{ $address->street }}, {{ $address->number }}</p>
+                                @if($address->complement)
+                                    <p class="text-gray-400 text-sm">{{ $address->complement }}</p>
+                                @endif
+                                <p class="text-gray-400 text-sm">{{ $address->city }}, {{ $address->state }}</p>
+                                <p class="text-gray-400 text-sm">CP: {{ $address->zipcode }}</p>
+                                <p class="text-gray-400 text-sm">Tel: {{ $address->phone }}</p>
+                                
+                                <div class="mt-3 flex space-x-2">
+                                    <a href="{{ route('addresses.edit', $address) }}" class="text-gray-400 hover:text-white text-sm">
+                                        Editar
+                                    </a>
+                                    @if(!$address->is_default)
+                                        <form action="{{ route('addresses.set-default', $address) }}" method="POST" class="inline">
                                             @csrf
-                                            <button type="submit" class="px-4 py-2 bg-neon-purple text-white font-bold rounded-lg hover:scale-105 transition">
-                                                Reclamar premio
+                                            <button type="submit" class="text-gray-500 hover:text-gray-300 text-sm">
+                                                Establecer como predeterminada
                                             </button>
                                         </form>
-                                    </div>
-                                @endforeach
+                                    @endif
+                                </div>
                             </div>
-                        </div>
-                    @endif
-
-                    @if($claimedAuctions->count() > 0)
-                        <div class="bg-gamer-card rounded-2xl border border-green-500/30 p-6">
-                            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                                <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                                ✅ Premios reclamados
-                            </h3>
-                            
-                            <div class="space-y-2">
-                                @foreach($claimedAuctions as $auction)
-                                    <div class="bg-gray-800/30 rounded-lg p-3 flex items-center space-x-3">
-                                        <img src="{{ $auction->image }}" alt="{{ $auction->name }}" class="w-8 h-8 object-cover rounded">
-                                        <span class="text-gray-300">{{ $auction->name }}</span>
-                                        <span class="text-green-500 text-sm ml-auto">{{ number_format($auction->price, 2) }}€</span>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-
-                    <!-- Estadísticas -->
-                    <div class="bg-gamer-card rounded-2xl border border-neon-blue/20 p-6">
-                        <h3 class="text-xl font-bold text-white mb-4">Estadísticas</h3>
-                        
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="text-center p-4 bg-gray-800/50 rounded-lg">
-                                <div class="text-3xl font-bold text-neon-blue">{{ App\Models\Order::where('user_id', $user->id)->count() }}</div>
-                                <div class="text-sm text-gray-400">Pedidos realizados</div>
-                            </div>
-                            <div class="text-center p-4 bg-gray-800/50 rounded-lg">
-                                <div class="text-3xl font-bold text-neon-purple">{{ $wonAuctions->count() + $claimedAuctions->count() }}</div>
-                                <div class="text-sm text-gray-400">Subastas ganadas</div>
-                            </div>
-                        </div>
+                        @endforeach
                     </div>
-                </div>
+                @else
+                    <div class="text-center py-8 bg-gray-800/30 rounded-lg">
+                        <p class="text-gray-400">No tienes direcciones guardadas</p>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

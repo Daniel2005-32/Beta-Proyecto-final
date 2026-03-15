@@ -9,6 +9,7 @@ use App\Models\Address;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\PriceHelper;
 
 class OrderController extends Controller
 {
@@ -36,6 +37,8 @@ class OrderController extends Controller
 
         $cart = Session::get('cart', []);
         
+        $priceWithoutIva = $product->price;
+        
         if (isset($cart[$id])) {
             if ($product->stock > $cart[$id]['quantity']) {
                 $cart[$id]['quantity']++;
@@ -45,7 +48,7 @@ class OrderController extends Controller
         } else {
             $cart[$id] = [
                 'name' => $product->name,
-                'price' => $product->price,
+                'price' => $priceWithoutIva,
                 'quantity' => 1,
                 'image' => $product->image,
                 'slug' => $product->slug
@@ -53,6 +56,7 @@ class OrderController extends Controller
         }
         
         Session::put('cart', $cart);
+        
         return redirect()->back()->with('success', 'Producto añadido al carrito');
     }
 
@@ -62,11 +66,11 @@ class OrderController extends Controller
         if ($check) return $check;
 
         $cart = Session::get('cart', []);
-        $total = array_sum(array_map(function($item) {
+        $subtotal = array_sum(array_map(function($item) {
             return $item['price'] * $item['quantity'];
         }, $cart));
         
-        return view('cart.index', compact('cart', 'total'));
+        return view('cart.index', compact('cart', 'subtotal'));
     }
 
     public function updateCart(Request $request, $id)
@@ -83,31 +87,26 @@ class OrderController extends Controller
                 $cart[$id]['quantity'] = $request->quantity;
                 Session::put('cart', $cart);
                 
-                $total = array_sum(array_map(function($item) {
+                $subtotal = array_sum(array_map(function($item) {
                     return $item['price'] * $item['quantity'];
                 }, $cart));
                 
-                if ($request->wantsJson()) {
-                    return response()->json([
-                        'success' => true,
-                        'subtotal' => number_format($total, 2),
-                        'total' => number_format($total, 2)
-                    ]);
-                }
-                
-                return redirect()->route('cart.index')->with('success', 'Carrito actualizado');
+                return response()->json([
+                    'success' => true,
+                    'subtotal' => number_format($subtotal, 2)
+                ]);
             } else {
-                if ($request->wantsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'error' => 'Stock insuficiente'
-                    ], 400);
-                }
-                return redirect()->route('cart.index')->with('error', 'Stock insuficiente. Máximo ' . ($product ? $product->stock : 0) . ' unidades');
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Stock insuficiente. Máximo ' . ($product ? $product->stock : 0) . ' unidades'
+                ], 400);
             }
         }
         
-        return redirect()->route('cart.index')->with('error', 'Producto no encontrado en el carrito');
+        return response()->json([
+            'success' => false,
+            'error' => 'Producto no encontrado en el carrito'
+        ], 404);
     }
 
     public function removeFromCart($id)
@@ -149,11 +148,11 @@ class OrderController extends Controller
         }
 
         $addresses = Address::where('user_id', auth()->id())->get();
-        $total = array_sum(array_map(function($item) {
+        $subtotal = array_sum(array_map(function($item) {
             return $item['price'] * $item['quantity'];
         }, $cart));
 
-        return view('cart.checkout', compact('cart', 'total', 'addresses'));
+        return view('cart.checkout', compact('cart', 'subtotal', 'addresses'));
     }
 
     public function checkout(Request $request)
@@ -180,6 +179,7 @@ class OrderController extends Controller
             abort(403);
         }
 
+        // Verificar stock de todos los productos
         foreach ($cart as $productId => $item) {
             $product = Product::find($productId);
             if (!$product) {
@@ -191,14 +191,16 @@ class OrderController extends Controller
             }
         }
 
-        $total = array_sum(array_map(function($item) {
+        // Calcular total sin IVA
+        $subtotal = array_sum(array_map(function($item) {
             return $item['price'] * $item['quantity'];
         }, $cart));
 
+        // Crear el pedido
         $order = Order::create([
             'user_id' => auth()->id(),
             'address_id' => $request->address_id,
-            'total' => $total,
+            'total' => $subtotal,
             'status' => 'pending'
         ]);
 
@@ -215,6 +217,11 @@ class OrderController extends Controller
             $product->decreaseStock($item['quantity']);
         }
 
+        // Generar entradas de sorteo
+        if (method_exists($order, 'generateRaffleEntries')) {
+            $order->generateRaffleEntries();
+        }
+
         Session::forget('cart');
         
         return redirect()->route('orders.show', $order)->with('success', 'Pedido realizado correctamente');
@@ -222,7 +229,7 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        if (auth()->id() !== $order->user_id) {
+        if (auth()->id() !== $order->user_id && !auth()->user()->is_admin) {
             abort(403, 'No tienes permiso para ver este pedido');
         }
         

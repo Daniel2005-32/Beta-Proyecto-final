@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Iniciar Sesión - Gamer Guild</title>
+    <title>Iniciar Sesión - Soul Guild</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -34,7 +34,7 @@
         <div class="relative z-10 text-center mb-8">
             <a href="{{ route('home') }}" class="inline-block group">
                 <h1 class="text-5xl font-black tracking-tighter">
-                    <span class="text-neon-blue group-hover:neon-text-blue transition">GAMER</span>
+                    <span class="text-neon-blue group-hover:neon-text-blue transition">SOUL</span>
                     <span class="text-neon-purple group-hover:neon-text-purple transition">GUILD</span>
                 </h1>
             </a>
@@ -119,7 +119,7 @@
 
         <!-- Footer pequeño -->
         <div class="relative z-10 mt-8 text-center text-gray-600 text-sm">
-            &copy; {{ date('Y') }} Gamer Guild. Todos los derechos reservados.
+            &copy; {{ date('Y') }} Soul Guild. Todos los derechos reservados.
         </div>
     </div>
 </body>
