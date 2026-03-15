@@ -1,28 +1,47 @@
-FROM richarvey/nginx-php-fpm:3.1.6
+FROM php:8.4-fpm-alpine
+
+# Install system dependencies
+RUN apk add --no-cache \
+    nginx \
+    zip \
+    unzip \
+    git \
+    supervisor \
+    curl \
+    libpng-dev \
+    libxml2-dev \
+    libzip-dev \
+    oniguruma-dev \
+    linux-headers
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo pdo_mysql opcache bcmath gd xml zip mbstring
+
+# Copy Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy everything
+# Copy application code
 COPY . .
 
-# Install dependencies (composer)
+# Install PHP dependencies (Composer)
 RUN composer install --no-dev --optimize-autoloader
 
-# Fix permissions for Laravel storage/cache
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# Copy Configuration files
+COPY nginx.conf /etc/nginx/http.d/default.conf
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Setup nginx root
-ENV WEBROOT /var/www/html/public
-ENV SKIP_COMPOSER 1
-ENV PHP_ERRORS_STDERR 1
+# Fix permissions
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Expose port
 EXPOSE 80
 
-# Run entrypoint script for migrations
+# Setup entrance script
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["/start.sh"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
