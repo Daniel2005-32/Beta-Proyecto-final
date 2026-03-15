@@ -8,5 +8,8 @@ php artisan view:cache
 # Run migrations (automatically in production)
 php artisan migrate --force
 
+# Seed database (idempotent with firstOrCreate)
+php artisan db:seed
+
 # Start the main container process via richarvey image
 exec "$@"
