@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
 import ProductsView from '../views/ProductsView.vue';
+import ProductDetailView from '../views/ProductDetailView.vue';
 import LoginView from '../views/auth/LoginView.vue';
 import RegisterView from '../views/auth/RegisterView.vue';
 import CartView from '../views/CartView.vue';
@@ -8,6 +9,8 @@ import ProfileView from '../views/profile/ProfileView.vue';
 import AddressesView from '../views/profile/AddressesView.vue';
 import AuctionsListView from '../views/auctions/AuctionsListView.vue';
 import AuctionDetailView from '../views/auctions/AuctionDetailView.vue';
+import RaffleListView from '../views/raffles/RaffleListView.vue';
+import RaffleDetailView from '../views/raffles/RaffleDetailView.vue';
 import CheckoutView from '../views/checkout/CheckoutView.vue';
 import DashboardView from '../views/admin/DashboardView.vue';
 
@@ -23,6 +26,11 @@ const router = createRouter({
       path: '/products',
       name: 'products',
       component: ProductsView
+    },
+    {
+      path: '/products/:id',
+      name: 'product-detail',
+      component: ProductDetailView
     },
     {
       path: '/login',
@@ -58,6 +66,16 @@ const router = createRouter({
       path: '/auctions/:id',
       name: 'auction-detail',
       component: AuctionDetailView
+    },
+    {
+      path: '/raffles',
+      name: 'raffles',
+      component: RaffleListView
+    },
+    {
+      path: '/raffles/:id',
+      name: 'raffle-detail',
+      component: RaffleDetailView
     },
     {
       path: '/checkout',

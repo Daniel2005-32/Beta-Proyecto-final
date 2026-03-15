@@ -49,12 +49,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auctions/{id}/cancel', [AuctionController::class, 'cancel']);
     Route::post('/auctions/{id}/claim', [AuctionController::class, 'claimPrize']);
     
+    // Protected Raffle Routes
+    Route::post('/raffles/{id}/enter', [RaffleController::class, 'enter']);
+    
     // Admin Auction Routes (auth implied by sanctum, need to check admin privileges in controller logic)
     Route::post('/auctions/{id}/extend', [AuctionController::class, 'extendAuction']);
     Route::post('/auctions/{id}/reduce', [AuctionController::class, 'reduceAuction']);
     Route::post('/auctions/{id}/reset', [AuctionController::class, 'resetAuctionTime']);
     Route::post('/auctions/{id}/force-end', [AuctionController::class, 'forceEndAuction']);
     
+    // Chat Routes
+    Route::get('/chat', [\App\Http\Controllers\ChatController::class, 'index']);
+    Route::post('/chat', [\App\Http\Controllers\ChatController::class, 'store']);
+
+    // Admin Management Routes
+    Route::get('/admin/users', [\App\Http\Controllers\AdminController::class, 'users']);
+    Route::post('/admin/users/{id}/ban', [\App\Http\Controllers\AdminController::class, 'toggleBan']);
+    Route::post('/admin/raffles', [\App\Http\Controllers\AdminController::class, 'createRaffle']);
+    Route::post('/admin/raffles/{id}/draw', [\App\Http\Controllers\AdminController::class, 'drawRaffle']);
+
     // Admin Product Routes
     Route::get('/admin/products', [ProductController::class, 'adminIndex']);
     Route::post('/products', [ProductController::class, 'store']);
