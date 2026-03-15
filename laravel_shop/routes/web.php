@@ -89,6 +89,27 @@ Route::post('/admin/clean-messages', function() {
         ], 500);
     }
 })->name('admin.clean-messages')->middleware('auth');
+
+// Ruta para forzar el Seed desde el navegador (Diagnóstico)
+Route::get('/admin/force-seed', function() {
+    if (request('key') !== 'luigi2005') {
+        return response()->json(['success' => false, 'error' => 'Clave incorrecta'], 403);
+    }
+    
+    try {
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\LocalDataSeeder', '--force' => true]);
+        return response()->json([
+            'success' => true,
+            'message' => '✅ Seeder ejecutado con éxito',
+            'output' => Artisan::output()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false, 
+            'error' => '❌ Error: ' . $e->getMessage()
+        ], 500);
+    }
+})->name('admin.force-seed');
 // ============================================
 // RUTAS DE SUBASTAS
 // ============================================
