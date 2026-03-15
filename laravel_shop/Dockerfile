@@ -12,10 +12,11 @@ RUN apk add --no-cache \
     libxml2-dev \
     libzip-dev \
     oniguruma-dev \
-    linux-headers
+    linux-headers \
+    postgresql-dev
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql opcache bcmath gd xml zip mbstring
+RUN docker-php-ext-install pdo pdo_mysql pdo_pgsql opcache bcmath gd xml zip mbstring
 
 # Copy Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
