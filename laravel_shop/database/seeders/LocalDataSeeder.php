@@ -11,7 +11,7 @@ class LocalDataSeeder extends Seeder
 {
     public function run(): void
     {
-        \Illuminate\Support\Facades\DB::statement('SET CONSTRAINTS ALL DEFERRED'); // Para Postgres
+        // \Illuminate\Support\Facades\DB::statement('SET CONSTRAINTS ALL DEFERRED'); // Para Postgres
         // Si es MySQL: \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
 
         $categories = array (

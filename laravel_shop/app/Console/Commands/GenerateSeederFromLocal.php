@@ -29,7 +29,7 @@ class GenerateSeederFromLocal extends Command
         $code = "<?php\n\nnamespace Database\Seeders;\n\nuse Illuminate\Database\Seeder;\nuse App\Models\User;\nuse App\Models\Category;\nuse App\Models\Product;\n\nclass LocalDataSeeder extends Seeder\n{\n    public function run(): void\n    {\n";
 
         // Desactivar claves foráneas para evitar conflictos de orden de inserción
-        $code .= "        \\Illuminate\\Support\\Facades\\DB::statement('SET CONSTRAINTS ALL DEFERRED'); // Para Postgres\n";
+        $code .= "        // \\Illuminate\\Support\\Facades\\DB::statement('SET CONSTRAINTS ALL DEFERRED'); // Para Postgres\n";
         $code .= "        // Si es MySQL: \\Illuminate\\Support\\Facades\\Schema::disableForeignKeyConstraints();\n\n";
 
         // 1. Categorías
