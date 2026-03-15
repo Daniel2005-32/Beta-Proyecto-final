@@ -124,7 +124,7 @@ Route::prefix('raffles')->name('raffles.')->group(function () {
 // ============================================
 // RUTAS DE DIRECCIONES
 // ============================================
-Route::middleware(['auth'])->prefix('addresses')->name('addresses.')->group(function () {
+Route::middleware(['auth'])->prefix('addresses')->name('web_addresses.')->group(function () {
     Route::get('/', [AddressController::class, 'index'])->name('index');
     Route::get('/create', [AddressController::class, 'create'])->name('create');
     Route::post('/', [AddressController::class, 'store'])->name('store');
