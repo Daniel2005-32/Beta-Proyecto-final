@@ -235,5 +235,9 @@ class DatabaseSeeder extends Seeder
                 ]
             );
         }
+        // Migración de Datos Locales
+        if (class_exists('Database\\Seeders\\LocalDataSeeder')) {
+            $this->call(LocalDataSeeder::class);
+        }
     }
 }
