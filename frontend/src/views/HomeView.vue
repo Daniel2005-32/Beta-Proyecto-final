@@ -2,8 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
 
-const apiBase = 'http://localhost:8000/api'; 
-
+const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 const featuredProducts = ref([]);
 const offerProducts = ref([]);
 const trendingProducts = ref([]);

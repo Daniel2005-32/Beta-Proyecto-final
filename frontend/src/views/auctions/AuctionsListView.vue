@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 
-const apiBase = 'http://localhost:8000/api';
+const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 const auctions = ref([]);
 const loading = ref(true);
 const error = ref(null);

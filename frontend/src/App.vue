@@ -20,7 +20,7 @@ const user = computed(() => {
 
 const logout = async () => {
     try {
-        await axios.post('http://localhost:8000/api/logout', {}, {
+        await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/logout`, {}, {
             headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
     } catch(e) { console.error(e); }

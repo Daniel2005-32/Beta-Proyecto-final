@@ -5,8 +5,7 @@ import axios from 'axios';
 
 const route = useRoute();
 const router = useRouter();
-const apiBase = 'http://localhost:8000/api';
-
+const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 const product = ref(null);
 const loading = ref(true);
 const error = ref(null);

@@ -5,7 +5,7 @@ import axios from 'axios';
 
 const router = useRouter();
 const cartItems = ref(JSON.parse(localStorage.getItem('cart') || '[]'));
-const apiBase = 'http://localhost:8000/api';
+const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 const loading = ref(false);
 
 const cartTotal = computed(() => {

@@ -4,8 +4,7 @@ import axios from 'axios';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
-const apiBase = 'http://localhost:8000/api';
-
+const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 const addresses = ref([]);
 const loading = ref(true);
 
