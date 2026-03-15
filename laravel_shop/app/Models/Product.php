@@ -18,6 +18,19 @@ class Product extends Model
         'auction_final_price'
     ];
 
+    protected $appends = ['image_url'];
+
+    public function getImageUrlAttribute()
+    {
+        if ($this->image) {
+            if (filter_var($this->image, FILTER_VALIDATE_URL)) {
+                return $this->image;
+            }
+            return asset('storage/' . $this->image);
+        }
+        return null;
+    }
+
     protected $casts = [
         'featured' => 'boolean',
         'trending' => 'boolean',

@@ -1,110 +1,74 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import axios from 'axios';
 
-const items = ref([]);
-const loading = ref(true);
-const error = ref(null);
-
-const fetchItems = async () => {
-  try {
-    const response = await fetch('http://localhost:3000/api/items');
-    if (!response.ok) throw new Error('Error al conectar con el backend');
-    items.value = await response.json();
-  } catch (err) {
-    error.value = err.message;
-    console.error(err);
-  } finally {
-    loading.value = false;
-  }
-};
-
-onMounted(() => {
-  fetchItems();
+const router = useRouter();
+const cartCount = computed(() => {
+   const items = JSON.parse(localStorage.getItem('cart') || '[]');
+   return items.reduce((total, item) => total + item.quantity, 0);
 });
+
+const isAuthenticated = computed(() => {
+    return !!localStorage.getItem('token');
+});
+
+const user = computed(() => {
+    const usr = localStorage.getItem('user');
+    return usr ? JSON.parse(usr) : null;
+});
+
+const logout = async () => {
+    try {
+        await axios.post('http://localhost:8000/api/logout', {}, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+    } catch(e) { console.error(e); }
+    
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    // axios default header update not needed on full reload, but good practice
+    delete axios.defaults.headers.common['Authorization'];
+    router.push('/login');
+};
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <h1>Mi Proyecto Final</h1>
-      <p>Estado del Backend: <span :class="error ? 'error' : 'success'">{{ error ? 'Desconectado' : 'Conectado' }}</span></p>
-    </div>
-  </header>
-
-  <main>
-    <section class="items-section">
-      <h2>Items desde la Base de Datos:</h2>
-      
-      <div v-if="loading">Cargando datos...</div>
-      
-      <div v-else-if="error" class="error-msg">
-        {{ error }}. Asegúrate de que el backend esté corriendo en el puerto 3000.
+  <div class="min-h-screen bg-gray-100 font-sans flex flex-col">
+    <nav class="bg-white shadow">
+      <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+        <router-link to="/" class="text-2xl font-black text-emerald-600 tracking-tighter">Soul Guild</router-link>
+        <div class="flex items-center gap-6 font-semibold text-gray-600">
+          <router-link to="/" class="hover:text-emerald-600 transition">Inicio</router-link>
+          <router-link to="/products" class="hover:text-emerald-600 transition">Productos</router-link>
+          <router-link to="/auctions" class="hover:text-emerald-600 transition">Subastas</router-link>
+          
+          <router-link to="/cart" class="flex items-center hover:text-emerald-600 transition relative">
+            <span>Carrito</span>
+            <span v-if="cartCount > 0" class="absolute -top-2 -right-3 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">{{ cartCount }}</span>
+          </router-link>
+          
+          <div v-if="isAuthenticated" class="flex items-center gap-4 ml-4 pl-4 border-l border-gray-200">
+            <span class="text-sm">Hola, <span class="text-emerald-600">{{ user?.name }}</span></span>
+            <router-link to="/profile" class="text-sm font-medium text-emerald-600 hover:text-emerald-500 underline">Mi Perfil</router-link>
+            <router-link v-if="user?.is_admin" to="/admin" class="text-sm font-black text-purple-600 hover:text-purple-800 transition underline tracking-wide">Admin Panel</router-link>
+            <button @click="logout" class="text-sm bg-gray-100 px-3 py-1 rounded hover:bg-red-50 hover:text-red-500 transition">Salir</button>
+          </div>
+          <div v-else class="flex gap-4 ml-4 pl-4 border-l border-gray-200">
+            <router-link to="/login" class="text-emerald-600 hover:text-emerald-700">Ingresar</router-link>
+            <router-link to="/register" class="bg-emerald-600 text-white px-4 py-1 rounded-full hover:bg-emerald-700 transition shadow-sm">Registrarse</router-link>
+          </div>
+        </div>
       </div>
-
-      <ul v-else-if="items.length > 0">
-        <li v-for="item in items" :key="item.id" class="item-card">
-          <h3>{{ item.name }}</h3>
-          <p>{{ item.description }}</p>
-          <small>Creado: {{ new Date(item.created_at).toLocaleString() }}</small>
-        </li>
-      </ul>
-
-      <p v-else>No se encontraron items en la base de datos.</p>
-    </section>
-  </main>
+    </nav>
+    <main class="flex-grow">
+      <router-view></router-view>
+    </main>
+    <footer class="bg-gray-800 text-gray-400 py-8 text-center text-sm border-t border-gray-700">
+      Soul Guild &copy; 2026. Todos los derechos reservados.
+    </footer>
+  </div>
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-  margin-bottom: 2rem;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-.success { color: #42b883; font-weight: bold; }
-.error { color: #ff6666; font-weight: bold; }
-.error-msg { background: #ff666622; padding: 1rem; border-radius: 8px; border: 1px solid #ff6666; }
-
-.items-section {
-  padding: 1rem;
-}
-
-.item-card {
-  list-style: none;
-  background: #2c3e50;
-  color: white;
-  padding: 1rem;
-  margin: 1rem 0;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.item-card h3 {
-  margin: 0 0 0.5rem 0;
-  color: #42b883;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-}
 </style>

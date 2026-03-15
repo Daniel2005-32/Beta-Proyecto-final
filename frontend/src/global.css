@@ -1,0 +1,18 @@
+@theme {
+  --color-gamer-dark: #0b0e14;
+  --color-gamer-card: #161b22;
+  --color-neon-blue: #00d2ff;
+  --color-neon-purple: #9d00ff;
+  --color-neon-red: #ff0055;
+  --color-neon-green: #39ff14;
+
+  --shadow-neon-blue: 0 0 5px #00d2ff, 0 0 20px #00d2ff;
+  --shadow-neon-purple: 0 0 5px #9d00ff, 0 0 20px #9d00ff;
+  --shadow-neon-red: 0 0 5px #ff0055, 0 0 20px #ff0055;
+}
+
+/* Custom Base Utility Overrides if needed */
+body {
+    background-color: var(--color-gamer-dark);
+    color: #e2e8f0;
+}

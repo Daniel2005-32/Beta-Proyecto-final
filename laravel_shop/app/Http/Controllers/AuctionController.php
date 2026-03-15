@@ -16,7 +16,7 @@ class AuctionController extends Controller
     private function checkBanned()
     {
         if (Auth::check() && Auth::user()->isBanned()) {
-            return redirect()->back()->with('error', 'No puedes realizar esta acción mientras estás baneado.');
+            return response()->json(['error' => 'No puedes realizar esta acción mientras estás baneado.'], 403);
         }
         return null;
     }
@@ -40,7 +40,7 @@ class AuctionController extends Controller
             ->orderBy('auction_end_time')
             ->paginate(12);
         
-        return view('auctions.index', compact('activeAuctions'));
+        return response()->json(['activeAuctions' => $activeAuctions]);
     }
 
     public function show($id)
@@ -54,31 +54,14 @@ class AuctionController extends Controller
         }
         
         if (!$product->isAuctionActive() && !$product->isAuctionEnded()) {
-            return redirect()->route('home')->with('error', 'Esta subasta no está activa');
+            return response()->json(['error' => 'Esta subasta no está activa'], 400);
         }
         
-        return view('auctions.show', compact('product'));
-    }
-
-    public function confirm($id)
-    {
-        // Verificar si el usuario está baneado
-        $check = $this->checkBanned();
-        if ($check) return $check;
-
-        $product = Product::findOrFail($id);
-        
-        if (!$product->is_exclusive || $product->stock != 1) {
-            return redirect()->route('products.show', $product->slug)
-                ->with('error', 'Este producto no está disponible para subasta');
-        }
-        
-        return view('auctions.confirm', compact('product'));
+        return response()->json(['product' => $product]);
     }
 
     public function bid(Request $request, $id)
     {
-        // Verificar si el usuario está baneado
         $check = $this->checkBanned();
         if ($check) return $check;
 
@@ -89,11 +72,11 @@ class AuctionController extends Controller
         $product = Product::findOrFail($id);
         
         if (!$product->isAuctionActive()) {
-            return back()->with('error', 'Esta subasta ya ha finalizado o no está activa');
+            return response()->json(['error' => 'Esta subasta ya ha finalizado o no está activa'], 400);
         }
         
         if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'Debes iniciar sesión para pujar');
+            return response()->json(['error' => 'Debes iniciar sesión para pujar'], 401);
         }
         
         // SIN IVA - Precio actual en BD (sin impuestos)
@@ -104,7 +87,7 @@ class AuctionController extends Controller
         
         if ($bidAmount <= $currentBid) {
             $minBid = number_format($currentBid + 0.01, 2);
-            return back()->with('error', "La puja debe ser mayor a {$minBid}€");
+            return response()->json(['error' => "La puja debe ser mayor a {$minBid}€"], 400);
         }
         
         // Actualizar el precio en BD (sin IVA)
@@ -112,58 +95,67 @@ class AuctionController extends Controller
         $product->auction_winner_id = Auth::id();
         $product->save();
         
-        return back()->with('success', '¡Puja realizada correctamente! Ahora eres el mejor postor');
+        return response()->json([
+            'success' => true, 
+            'message' => '¡Puja realizada correctamente! Ahora eres el mejor postor',
+            'product' => $product->load('auctionWinner')
+        ]);
     }
 
     public function start(Request $request, $id)
     {
-        // Verificar si el usuario está baneado
         $check = $this->checkBanned();
         if ($check) return $check;
 
         $product = Product::findOrFail($id);
         
         if (!$product->is_exclusive || $product->stock != 1) {
-            return redirect()->route('home')->with('error', 'Este producto no puede iniciar subasta');
+            return response()->json(['error' => 'Este producto no puede iniciar subasta'], 400);
         }
         
         $product->startAuction();
         
-        return redirect()->route('auctions.show', $product->id)
-            ->with('success', '¡Subasta iniciada! 24 horas para pujar');
+        return response()->json([
+            'success' => true, 
+            'message' => '¡Subasta iniciada! 24 horas para pujar',
+            'product' => $product
+        ]);
     }
 
     public function cancel(Request $request, $id)
     {
         $product = Product::findOrFail($id);
-        
         $product->cancelAuction();
         
-        return redirect()->route('home')
-            ->with('info', 'Subasta cancelada');
+        return response()->json([
+            'success' => true, 
+            'message' => 'Subasta cancelada'
+        ]);
     }
 
     public function claimPrize($id)
     {
-        // Verificar si el usuario está baneado
         $check = $this->checkBanned();
         if ($check) return $check;
 
         $product = Product::findOrFail($id);
         
         if (!Auth::check() || Auth::id() != $product->auction_winner_id) {
-            return redirect()->route('home')->with('error', 'No eres el ganador de esta subasta');
+            return response()->json(['error' => 'No eres el ganador de esta subasta'], 403);
         }
         
         if ($product->auction_claimed) {
-            return redirect()->route('profile.index')->with('info', 'Ya has reclamado este premio');
+            return response()->json(['error' => 'Ya has reclamado este premio'], 400);
         }
         
         // Marcar como reclamado
         $product->auction_claimed = true;
         $product->save();
         
-        return redirect()->route('profile.index')->with('success', '¡Premio reclamado correctamente!');
+        return response()->json([
+            'success' => true, 
+            'message' => '¡Premio reclamado correctamente!'
+        ]);
     }
 
     // ============================================
@@ -173,7 +165,7 @@ class AuctionController extends Controller
     public function extendAuction(Request $request, $id)
     {
         if (!auth()->check() || !auth()->user()->is_admin) {
-            abort(403, 'Acceso no autorizado');
+            return response()->json(['error' => 'Acceso no autorizado'], 403);
         }
         
         $request->validate([
@@ -183,7 +175,7 @@ class AuctionController extends Controller
         $product = Product::findOrFail($id);
         
         if (!$product->is_in_auction) {
-            return back()->with('error', 'Este producto no está en subasta');
+            return response()->json(['error' => 'Este producto no está en subasta'], 400);
         }
         
         $hours = (int) $request->hours;
@@ -191,13 +183,13 @@ class AuctionController extends Controller
         $product->auction_end_time = $newEndTime;
         $product->save();
         
-        return redirect()->back()->with('success', "✅ Subasta extendida {$hours} horas");
+        return response()->json(['success' => true, 'message' => "Subasta extendida {$hours} horas", 'product' => $product]);
     }
     
     public function reduceAuction(Request $request, $id)
     {
         if (!auth()->check() || !auth()->user()->is_admin) {
-            abort(403, 'Acceso no autorizado');
+            return response()->json(['error' => 'Acceso no autorizado'], 403);
         }
         
         $request->validate([
@@ -207,56 +199,56 @@ class AuctionController extends Controller
         $product = Product::findOrFail($id);
         
         if (!$product->is_in_auction) {
-            return back()->with('error', 'Este producto no está en subasta');
+            return response()->json(['error' => 'Este producto no está en subasta'], 400);
         }
         
         $hours = (int) $request->hours;
         $newEndTime = Carbon::parse($product->auction_end_time)->subHours($hours);
         
         if ($newEndTime < Carbon::now()) {
-            return back()->with('error', '❌ No puedes reducir la subasta por debajo del tiempo actual');
+            return response()->json(['error' => 'No puedes reducir la subasta por debajo del tiempo actual'], 400);
         }
         
         $product->auction_end_time = $newEndTime;
         $product->save();
         
-        return redirect()->back()->with('success', "✅ Subasta reducida {$hours} horas");
+        return response()->json(['success' => true, 'message' => "Subasta reducida {$hours} horas", 'product' => $product]);
     }
     
     public function resetAuctionTime(Request $request, $id)
     {
         if (!auth()->check() || !auth()->user()->is_admin) {
-            abort(403, 'Acceso no autorizado');
+            return response()->json(['error' => 'Acceso no autorizado'], 403);
         }
         
         $product = Product::findOrFail($id);
         
         if (!$product->is_in_auction) {
-            return back()->with('error', 'Este producto no está en subasta');
+            return response()->json(['error' => 'Este producto no está en subasta'], 400);
         }
         
         $product->auction_end_time = Carbon::now()->addHours(24);
         $product->save();
         
-        return back()->with('success', '✅ Subasta reiniciada a 24 horas');
+        return response()->json(['success' => true, 'message' => 'Subasta reiniciada a 24 horas', 'product' => $product]);
     }
     
     public function forceEndAuction($id)
     {
         if (!auth()->check() || !auth()->user()->is_admin) {
-            abort(403, 'Acceso no autorizado');
+            return response()->json(['error' => 'Acceso no autorizado'], 403);
         }
         
         $product = Product::findOrFail($id);
         
         if (!$product->is_in_auction) {
-            return back()->with('error', 'Este producto no está en subasta');
+            return response()->json(['error' => 'Este producto no está en subasta'], 400);
         }
         
         $product->auction_end_time = Carbon::now();
         $product->save();
         $product->endAuctionAndRemoveFromCatalog();
         
-        return back()->with('success', '✅ Subasta finalizada forzosamente');
+        return response()->json(['success' => true, 'message' => 'Subasta finalizada forzosamente', 'product' => $product]);
     }
 }

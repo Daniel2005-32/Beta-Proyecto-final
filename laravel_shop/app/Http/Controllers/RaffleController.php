@@ -26,13 +26,19 @@ class RaffleController extends Controller
             ->take(5)
             ->get();
 
-        return view('raffles.index', compact('activeRaffles', 'upcomingRaffles', 'endedRaffles'));
+        return response()->json([
+            'activeRaffles' => $activeRaffles,
+            'upcomingRaffles' => $upcomingRaffles,
+            'endedRaffles' => $endedRaffles
+        ]);
     }
 
     public function show($id)
     {
         $raffle = Raffle::with('winner', 'entries.user')->findOrFail($id);
         
-        return view('raffles.show', compact('raffle'));
+        return response()->json([
+            'raffle' => $raffle
+        ]);
     }
 }

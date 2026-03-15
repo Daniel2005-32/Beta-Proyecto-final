@@ -15,16 +15,7 @@ class ProfileController extends Controller
     public function index()
     {
         $user = Auth::user();
-        return view('profile.index', compact('user'));
-    }
-
-    /**
-     * Mostrar formulario de edición
-     */
-    public function edit()
-    {
-        $user = Auth::user();
-        return view('profile.edit', compact('user'));
+        return response()->json(['user' => $user]);
     }
 
     /**
@@ -44,7 +35,11 @@ class ProfileController extends Controller
             'email' => $request->email,
         ]);
 
-        return redirect()->route('profile.index')->with('success', 'Perfil actualizado correctamente');
+        return response()->json([
+            'success' => true,
+            'message' => 'Perfil actualizado correctamente',
+            'user' => $user
+        ]);
     }
 
     /**
@@ -60,14 +55,17 @@ class ProfileController extends Controller
         $user = Auth::user();
 
         if (!Hash::check($request->current_password, $user->password)) {
-            return back()->with('error', 'La contraseña actual no es correcta');
+            return response()->json(['error' => 'La contraseña actual no es correcta'], 400);
         }
 
         $user->update([
             'password' => Hash::make($request->new_password)
         ]);
 
-        return redirect()->route('profile.index')->with('success', 'Contraseña cambiada correctamente');
+        return response()->json([
+            'success' => true,
+            'message' => 'Contraseña cambiada correctamente'
+        ]);
     }
 
     /**
@@ -94,6 +92,10 @@ class ProfileController extends Controller
             $user->save();
         }
 
-        return redirect()->route('profile.index')->with('success', 'Avatar actualizado correctamente');
+        return response()->json([
+            'success' => true,
+            'message' => 'Avatar actualizado correctamente',
+            'avatar' => url('avatars/' . $user->avatar)
+        ]);
     }
 }

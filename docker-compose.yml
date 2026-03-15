@@ -1,4 +1,5 @@
 services:
+  # Base de Datos
   mysql:
     image: mysql:8.0
     container_name: proyecto_mysql
@@ -9,11 +10,13 @@ services:
       MYSQL_USER: Daniel
       MYSQL_PASSWORD: DanielSM
     ports:
-      - "3307:3306"  # ✅ Libre
+      - "3307:3306"
     volumes:
       - mysql_data_fresh:/var/lib/mysql
-      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      # En caso de necesitar inicializar algo:
+      # - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
 
+  # UI de Base de Datos
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: proyecto_phpmyadmin
@@ -24,19 +27,43 @@ services:
       PMA_HOST: mysql
       UPLOAD_LIMIT: 100M
     ports:
-      - "8080:80"  # ✅ Libre
+      - "8080:80"
 
+  # API Laravel (Backend)
+  backend:
+    build:
+      context: ./laravel_shop
+      dockerfile: Dockerfile.local
+    container_name: proyecto_backend
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    working_dir: /app
+    volumes:
+      - ./laravel_shop:/app
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=proyecto_final
+      - DB_USERNAME=Daniel
+      - DB_PASSWORD=DanielSM
+    ports:
+      - "8000:8000"
+    command: bash -c "composer install --no-interaction && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
+
+  # Vue.js SPA (Frontend)
   frontend:
-    build: .
+    image: node:20-alpine
     container_name: proyecto_frontend
     restart: unless-stopped
+    working_dir: /app
     volumes:
-      - .:/app
+      - ./frontend:/app
       - /app/node_modules
     ports:
-      - "5173:5173"  # ✅ Libre (Vue en puerto 3000)
-    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0"
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
 
 volumes:
-  mysql_data:
   mysql_data_fresh:

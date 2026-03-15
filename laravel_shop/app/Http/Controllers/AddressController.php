@@ -11,12 +11,7 @@ class AddressController extends Controller
     public function index()
     {
         $addresses = Address::where('user_id', Auth::id())->get();
-        return view('addresses.index', compact('addresses'));
-    }
-
-    public function create()
-    {
-        return view('addresses.create');
+        return response()->json(['addresses' => $addresses]);
     }
 
     public function store(Request $request)
@@ -49,21 +44,17 @@ class AddressController extends Controller
         // Crear la dirección
         $address = Address::create($data);
 
-        return redirect()->route('addresses.index')->with('success', 'Dirección guardada correctamente');
-    }
-
-    public function edit(Address $address)
-    {
-        if ($address->user_id != Auth::id()) {
-            abort(403);
-        }
-        return view('addresses.edit', compact('address'));
+        return response()->json([
+            'success' => true,
+            'message' => 'Dirección guardada correctamente',
+            'address' => $address
+        ], 201);
     }
 
     public function update(Request $request, Address $address)
     {
         if ($address->user_id != Auth::id()) {
-            abort(403);
+            return response()->json(['error' => 'No autorizado'], 403);
         }
 
         $request->validate([
@@ -86,13 +77,17 @@ class AddressController extends Controller
 
         $address->update($data);
 
-        return redirect()->route('addresses.index')->with('success', 'Dirección actualizada');
+        return response()->json([
+            'success' => true,
+            'message' => 'Dirección actualizada',
+            'address' => $address
+        ]);
     }
 
     public function destroy(Address $address)
     {
         if ($address->user_id != Auth::id()) {
-            abort(403);
+            return response()->json(['error' => 'No autorizado'], 403);
         }
 
         $wasDefault = $address->is_default;
@@ -105,18 +100,24 @@ class AddressController extends Controller
             }
         }
 
-        return redirect()->route('addresses.index')->with('success', 'Dirección eliminada');
+        return response()->json([
+            'success' => true,
+            'message' => 'Dirección eliminada'
+        ]);
     }
 
     public function setDefault(Address $address)
     {
         if ($address->user_id != Auth::id()) {
-            abort(403);
+            return response()->json(['error' => 'No autorizado'], 403);
         }
 
         Address::where('user_id', Auth::id())->update(['is_default' => false]);
         $address->update(['is_default' => true]);
 
-        return redirect()->back()->with('success', 'Dirección predeterminada actualizada');
+        return response()->json([
+            'success' => true,
+            'message' => 'Dirección predeterminada actualizada'
+        ]);
     }
 }
