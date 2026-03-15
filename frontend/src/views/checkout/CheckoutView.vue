@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router';
 import axios from 'axios';
 
 const router = useRouter();
-const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const apiBase = import.meta.env.VITE_API_URL ? (import.meta.env.VITE_API_URL.endsWith('/api') ? import.meta.env.VITE_API_URL : import.meta.env.VITE_API_URL + '/api') : 'http://localhost:8000/api';
 const cart = ref([]);
 const addresses = ref([]);
 const selectedAddressId = ref(null);
