@@ -173,14 +173,7 @@ class UserController extends Controller
                 ->with('error', 'No tienes permiso para eliminar este usuario');
         }
 
-        // No permitir eliminarse a sí mismo
-        if ($user->id === auth()->id()) {
-            if (request()->wantsJson()) {
-                return response()->json(['status' => 'error', 'message' => 'No puedes eliminarte a ti mismo'], 400);
-            }
-            return redirect()->route('admin.users.index')
-                ->with('error', 'No puedes eliminarte a ti mismo');
-        }
+
 
         $user->delete();
 

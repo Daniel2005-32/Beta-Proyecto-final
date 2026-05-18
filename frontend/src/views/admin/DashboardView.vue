@@ -1225,18 +1225,15 @@ const generateCouponCode = () => {
                                     Editar
                                 </button>
                                 
-                                <span v-if="currentUser && user.id === currentUser.id" class="text-gray-600 text-[10px] italic">Eres tú</span>
+                                <span v-if="currentUser && user.id == currentUser.id" class="text-gray-600 text-[10px] italic mr-2">Eres tú</span>
 
-                                <template v-else>
-                                    <!-- No permitir banear a otros administradores si no eres super admin, y nunca a super admins -->
-                                    <button v-if="!user.is_super_admin && (!user.is_admin || (currentUser && currentUser.is_super_admin))" @click="openBanModal(user)" class="text-xs transition" :class="user.is_banned ? 'text-green-400 hover:underline' : 'text-red-400 hover:underline'">
-                                        {{ user.is_banned ? 'Desbanear' : 'Banear' }}
-                                    </button>
+                                <!-- No permitir banear a otros administradores si no eres super admin, y nunca a super admins (tampoco banearse a sí mismo) -->
+                                <button v-if="!user.is_super_admin && (!user.is_admin || (currentUser && currentUser.is_super_admin)) && user.id != currentUser.id" @click="openBanModal(user)" class="text-xs transition mr-2" :class="user.is_banned ? 'text-green-400 hover:underline' : 'text-red-400 hover:underline'">
+                                    {{ user.is_banned ? 'Desbanear' : 'Banear' }}
+                                </button>
 
-                                    
-                                    <!-- No permitir eliminar a otros administradores si no eres super admin, y nunca a super admins -->
-                                    <button v-if="!user.is_super_admin && (!user.is_admin || (currentUser && currentUser.is_super_admin))" @click="deleteUser(user)" class="text-red-500 hover:underline text-xs">Eliminar</button>
-                                </template>
+                                <!-- No permitir eliminar a otros administradores si no eres super admin, y nunca a super admins -->
+                                <button v-if="!user.is_super_admin && (!user.is_admin || (currentUser && currentUser.is_super_admin))" @click="deleteUser(user)" class="text-red-500 hover:underline text-xs">Eliminar</button>
                             </td>
                         </tr>
                         <tr v-if="users.length === 0">

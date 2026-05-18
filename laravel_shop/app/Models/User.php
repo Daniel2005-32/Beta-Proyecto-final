@@ -13,6 +13,26 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    protected static function booted()
+    {
+        static::deleting(function ($user) {
+            // Eliminar pujas asociadas
+            \App\Models\Bid::where('user_id', $user->id)->delete();
+
+            // Desvincular ganador actual en subastas
+            \App\Models\Auction::where('current_winner_id', $user->id)
+                ->update(['current_winner_id' => null]);
+
+            // Desvincular ganador de productos en subasta
+            \App\Models\Product::where('auction_winner_id', $user->id)
+                ->update(['auction_winner_id' => null]);
+
+            // Eliminar wishlist y bans por si acaso
+            $user->wishlist()->delete();
+            $user->bans()->delete();
+        });
+    }
+
     protected $fillable = [
         'name',
         'email',
