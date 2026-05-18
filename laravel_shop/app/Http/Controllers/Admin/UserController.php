@@ -57,8 +57,8 @@ class UserController extends Controller
 
     public function create()
     {
-        if (!auth()->check() || !auth()->user()->is_admin) {
-            abort(403, 'Acceso no autorizado');
+        if (!auth()->check() || !auth()->user()->is_super_admin) {
+            abort(403, 'Acceso no autorizado. Solo el superadministrador puede realizar esta acción.');
         }
 
         return view('admin.users.create');
@@ -66,8 +66,8 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        if (!auth()->check() || !auth()->user()->is_admin) {
-            abort(403, 'Acceso no autorizado');
+        if (!auth()->check() || !auth()->user()->is_super_admin) {
+            abort(403, 'Acceso no autorizado. Solo el superadministrador puede realizar esta acción.');
         }
 
         $request->validate([

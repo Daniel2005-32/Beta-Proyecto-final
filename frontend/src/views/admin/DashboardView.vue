@@ -781,6 +781,10 @@ const handleImageUpload = (event) => {
 
 
 const openUserModal = (user = null) => {
+    if (!currentUser.value || !currentUser.value.is_super_admin) {
+        store.notify("Acceso denegado. Solo el superadministrador puede realizar esta acción.", "error");
+        return;
+    }
     userErrors.value = {};
     if (user) {
         isEditingUser.value = true;
@@ -801,6 +805,10 @@ const openUserModal = (user = null) => {
 };
 
 const saveUser = async () => {
+    if (!currentUser.value || !currentUser.value.is_super_admin) {
+        store.notify("Acceso denegado. Solo el superadministrador puede realizar esta acción.", "error");
+        return;
+    }
     userErrors.value = {};
     try {
         const token = localStorage.getItem('token');
@@ -1170,7 +1178,7 @@ const generateCouponCode = () => {
                         <option value="role">Mayor Importancia</option>
                     </select>
                 </div>
-                <button @click="openUserModal()" class="bg-gradient-to-r from-neon-purple to-neon-blue text-white px-4 py-2 rounded-xl text-xs font-black shadow-neon-purple/20 hover:scale-105 transition">Crear Usuario</button>
+                <button v-if="currentUser && currentUser.is_super_admin" @click="openUserModal()" class="bg-gradient-to-r from-neon-purple to-neon-blue text-white px-4 py-2 rounded-xl text-xs font-black shadow-neon-purple/20 hover:scale-105 transition">Crear Usuario</button>
             </div>
             <div class="bg-gamer-card rounded-xl overflow-x-auto border border-gray-800 shadow-xl">
                 <table class="w-full text-left border-collapse text-sm whitespace-nowrap md:whitespace-normal">
