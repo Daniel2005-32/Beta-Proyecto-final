@@ -160,15 +160,17 @@ const submitReview = async () => {
         return;
     }
     submittingReview.value = true;
-    reviewSuccess.value = null;
     reviewError.value = null;
     try {
-        await axios.post(`${apiBase}/products/${product.value.id}/reviews`, reviewForm.value);
+        const token = localStorage.getItem('token');
+        await axios.post(`${apiBase}/products/${product.value.id}/reviews`, reviewForm.value, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
         store.notify("Valoración enviada correctamente. Pendiente de aprobación.");
         reviewForm.value.comment = '';
         reviewForm.value.rating = 5;
     } catch (err) {
-        reviewError.value = err.response?.data?.error || "Hubo un error al enviar la valoración.";
+        reviewError.value = err.response?.data?.error || err.response?.data?.message || err.message || "Hubo un error al enviar la valoración.";
     } finally {
         submittingReview.value = false;
     }
