@@ -21,14 +21,14 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        User::firstOrCreate(
+        /* User::firstOrCreate(
             ['email' => 'danielsmartin2005@gmail.com'],
             [
                 'name' => 'Daniel',
                 'password' => bcrypt('luigi2005'),
                 'is_admin' => true,
             ]
-        );
+        ); */
 
         // ===== CATEGORÍAS ACTUALIZADAS =====
         // Ahora en lugar de Figuras y Merchandising, creamos Productos Anime

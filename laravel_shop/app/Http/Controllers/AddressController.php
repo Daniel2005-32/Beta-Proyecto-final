@@ -24,12 +24,13 @@ class AddressController extends Controller
             'number' => 'required|string|max:20',
             'complement' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
-            'state' => 'required|string|max:255',
+            'state' => 'required|string|size:2',
             'zipcode' => 'required|string|max:10',
         ]);
 
         // Preparar los datos
         $data = $request->all();
+        $data['state'] = strtoupper($data['state']);
         $data['user_id'] = Auth::id();
         
         // Verificar si es la primera dirección
@@ -64,11 +65,12 @@ class AddressController extends Controller
             'number' => 'required|string|max:20',
             'complement' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
-            'state' => 'required|string|max:255',
+            'state' => 'required|string|size:2',
             'zipcode' => 'required|string|max:10',
         ]);
 
         $data = $request->all();
+        $data['state'] = strtoupper($data['state']);
         
         if ($request->has('is_default') && !$address->is_default) {
             Address::where('user_id', Auth::id())->where('id', '!=', $address->id)->update(['is_default' => false]);

@@ -24,7 +24,7 @@ services:
     container_name: laravel-nginx
     restart: unless-stopped
     ports:
-      - "8082:80"  # Cambiado a 8082 para evitar conflicto
+      - "8000:80"  # Cambiado a 8000 para que coincida con el frontend
       - "4433:443" # Puerto 4433 para HTTPS
     volumes:
       - ./:/var/www/html

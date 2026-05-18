@@ -11,7 +11,7 @@ class Ban extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'banned_by', 'reason', 'banned_until', 'is_permanent'
+        'user_id', 'banned_by', 'reason', 'banned_until', 'is_permanent', 'ip_address', 'type'
     ];
 
     protected $casts = [

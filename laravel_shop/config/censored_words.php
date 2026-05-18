@@ -387,6 +387,11 @@ return [
         'jodete', 'jódete',
         'jodanse', 'jódanse',
         'maldito', 'maldita',
+
+        // ============================================
+        // SEGURIDAD / BLOQUEO DE SCRIPTS (ANTI-TROLL)
+        // ============================================
+        '<script', '</script>', 'javascript:', 'alert(', 'onclick=', 'onerror=', 'onload=', 'eval(',
     ],
 
     /*

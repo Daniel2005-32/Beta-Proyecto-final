@@ -60,7 +60,7 @@ class CensorHelper
         
         // Patrón combinado (para detección rápida)
         if (!empty($badWords)) {
-            $allWords = array_map('preg_quote', $badWords);
+            $allWords = array_map(fn($w) => preg_quote($w, '/'), $badWords);
             self::$patterns['all'] = '/(' . implode('|', $allWords) . ')/i';
         }
         
@@ -186,7 +186,7 @@ class CensorHelper
         
         if (!$compiled) {
             $badWords = config('censored_words.words', []);
-            $allWords = array_map('preg_quote', $badWords);
+            $allWords = array_map(fn($w) => preg_quote($w, '/'), $badWords);
             $patterns['all'] = '/(' . implode('|', $allWords) . ')/i';
             $compiled = true;
         }

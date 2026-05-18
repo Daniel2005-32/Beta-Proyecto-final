@@ -22,6 +22,7 @@ class ProductReviewController extends Controller
         $request->validate([
             'rating' => 'required|integer|min:1|max:5',
             'comment' => 'nullable|string|max:500',
+            'image' => 'nullable|image|max:2048' // Max 2MB
         ]);
 
         // Verificar si ya valoró
@@ -29,11 +30,17 @@ class ProductReviewController extends Controller
             return response()->json(['error' => 'Ya has valorado este producto'], 400);
         }
 
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('reviews', 'public');
+        }
+
         $review = ProductReview::create([
             'product_id' => $product->id,
             'user_id' => auth()->id(),
             'rating' => $request->rating,
             'comment' => $request->comment,
+            'image' => $imagePath,
             'is_approved' => false // Pendiente de moderación
         ]);
 

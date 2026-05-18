@@ -4,6 +4,7 @@
             <tr>
                 <th class="px-6 py-4 text-left text-neon-green">ID</th>
                 <th class="px-6 py-4 text-left text-neon-green">Cliente</th>
+                <th class="px-6 py-4 text-left text-neon-green">Productos</th>
                 <th class="px-6 py-4 text-left text-neon-green">Total</th>
                 <th class="px-6 py-4 text-left text-neon-green">Fecha</th>
                 <th class="px-6 py-4 text-left text-neon-green">Estado</th>
@@ -26,6 +27,16 @@
                         </div>
                     </td>
                     <td class="px-6 py-4">
+                        <div class="max-w-[200px] space-y-1">
+                            @foreach($order->items as $item)
+                                <div class="text-[10px] leading-tight">
+                                    <span class="text-neon-blue font-black">{{ $item->quantity }}x</span>
+                                    <span class="text-gray-400 uppercase tracking-tighter">{{ $item->product->name ?? 'Producto eliminado' }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
                         <span class="text-neon-green font-bold">{{ number_format($order->total, 2) }}€</span>
                     </td>
                     <td class="px-6 py-4 text-gray-400 text-sm">{{ $order->created_at->format('d/m/Y H:i') }}</td>
@@ -44,6 +55,24 @@
                                class="px-3 py-1 bg-neon-blue/10 text-neon-blue rounded-lg hover:bg-neon-blue hover:text-gamer-dark transition text-sm">
                                 Ver detalles
                             </a>
+                            
+                            @if($order->status == 'pending')
+                                <form action="{{ route('admin.orders.update-status', $order) }}" method="POST" class="inline">
+                                    @csrf
+                                    <input type="hidden" name="status" value="completed">
+                                    <button type="submit" class="px-3 py-1 bg-green-600/20 text-green-400 rounded-lg hover:bg-green-600 hover:text-white transition text-xs font-bold uppercase">
+                                        Completar
+                                    </button>
+                                </form>
+                                <form action="{{ route('admin.orders.update-status', $order) }}" method="POST" class="inline">
+                                    @csrf
+                                    <input type="hidden" name="status" value="cancelled">
+                                    <button type="submit" class="px-3 py-1 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition text-xs font-bold uppercase">
+                                        Cancelar
+                                    </button>
+                                </form>
+                            @endif
+
                             <form action="{{ route('admin.orders.destroy', $order) }}" 
                                   method="POST" 
                                   onsubmit="return confirm('¿Eliminar este pedido?')"

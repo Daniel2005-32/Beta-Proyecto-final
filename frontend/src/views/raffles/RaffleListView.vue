@@ -1,8 +1,10 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
+import LoadingState from '@/components/LoadingState.vue';
 
-const apiBase = import.meta.env.VITE_API_URL ? (import.meta.env.VITE_API_URL.endsWith('/api') ? import.meta.env.VITE_API_URL : import.meta.env.VITE_API_URL + '/api') : 'http://localhost:8000/api';
+
+import { apiBase } from '@/utils/api';
 
 const raffles = ref([]);
 const loading = ref(true);
@@ -10,7 +12,9 @@ const error = ref(null);
 
 const fetchRaffles = async () => {
     try {
-        const response = await axios.get(`${apiBase}/raffles`);
+        const token = localStorage.getItem('token');
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const response = await axios.get(`${apiBase}/raffles`, { headers });
         raffles.value = response.data.raffles || [];
     } catch (err) {
         error.value = "Error al cargar la lista de sorteos.";
@@ -31,8 +35,11 @@ onMounted(() => {
         <p class="text-gray-400 text-xs mt-1">Participa y gana ediciones de colección, consolas y merchandising único.</p>
     </div>
 
-    <div v-if="loading" class="text-center py-16 text-gray-500">Cargando sorteos...</div>
-    <div v-else-if="error" class="text-center py-16 text-red-400 font-bold bg-red-500/10 border border-red-500/20 rounded-xl">{{ error }}</div>
+    <LoadingState v-if="loading" />
+    <div v-else-if="error" class="text-center py-16 bg-red-500/10 border border-red-500/20 rounded-3xl">
+        <p class="text-red-400 font-bold mb-4">{{ error }}</p>
+        <button @click="fetchRaffles" class="bg-red-500 text-white px-6 py-2 rounded-xl text-xs font-black uppercase hover:bg-white hover:text-red-600 transition">Reintentar Conexión</button>
+    </div>
     
     <div v-else-if="raffles.length === 0" class="text-center py-24 bg-gamer-card border border-gray-800 rounded-3xl text-gray-400">
         <p class="text-sm">No hay sorteos activos en este momento. ¡Vuelve pronto!</p>
@@ -43,8 +50,12 @@ onMounted(() => {
             
             <!-- Promo Item Info image if exists -->
             <div class="h-48 bg-black/10 flex items-center justify-center overflow-hidden relative border-b border-gray-800/50">
-                <img v-if="raffle.product?.image_url" :src="raffle.product.image_url" :alt="raffle.title" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
-                <div v-else class="flex flex-col items-center text-gray-600 text-xs">
+                <img v-if="raffle.image_url" :src="raffle.image_url" :alt="raffle.title" loading="lazy" class="w-full h-full object-contain group-hover:scale-105 transition duration-700" :class="{'blur-2xl scale-125': raffle.is_censored && (!store.user || !store.user.show_censored_content)}">
+                
+                <div v-if="raffle.is_censored && (!store.user || !store.user.show_censored_content)" class="absolute inset-0 z-30 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+                    <span class="bg-red-600/30 border border-red-500/50 text-red-500 text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg shadow-red-600/30">Censurado</span>
+                </div>
+                <div v-else-if="!raffle.image_url" class="flex flex-col items-center text-gray-600 text-xs">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 opacity-20 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     <span>Sin imagen de producto</span>
                 </div>
@@ -60,15 +71,15 @@ onMounted(() => {
                 <div class="space-y-2 mb-4 border-t border-gray-800/50 pt-3">
                     <div class="flex justify-between text-xs">
                         <span class="text-gray-500">Precio Ticket:</span>
-                        <span class="text-neon-green font-bold">${{ raffle.ticket_price }}</span>
+                        <span class="text-neon-cyan font-bold">{{raffle.ticket_price}}€</span>
                     </div>
                     <div class="flex justify-between text-xs">
                         <span class="text-gray-500">Tickets Vendidos:</span>
                         <span class="text-white">{{ raffle.total_entries }} <span v-if="raffle.max_entries">/ {{ raffle.max_entries }}</span></span>
                     </div>
-                    <div class="flex justify-between text-xs">
-                        <span class="text-gray-500">Tiempo restante:</span>
-                        <span class="text-neon-blue">{{ raffle.time_left }}</span>
+                    <div class="flex justify-between text-xs font-bold pt-2 border-t border-gray-800/50 mt-2">
+                        <span class="text-gray-500 uppercase text-[9px]">Probabilidad:</span>
+                        <span class="text-neon-cyan">{{ raffle.user_chance ?? 0 }}%</span>
                     </div>
                 </div>
 

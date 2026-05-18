@@ -68,8 +68,8 @@
                             <a href="{{ route('products.category', 'manga') }}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-neon-blue/10 hover:text-neon-blue transition">
                                 Manga
                             </a>
-                            <a href="{{ route('products.category', 'productos-anime') }}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-neon-blue/10 hover:text-neon-blue transition">
-                                Productos Anime
+                            <a href="{{ route('products.category', 'merchandising') }}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-neon-blue/10 hover:text-neon-blue transition">
+                                Merchandising
                             </a>
                             <div class="border-t border-neon-blue/20 my-2"></div>
                             <a href="{{ route('products.index') }}" class="block px-4 py-2 text-sm text-neon-purple hover:bg-neon-purple/10 hover:text-neon-purple transition font-bold">
@@ -88,8 +88,8 @@
                     <a href="{{ route('products.category', 'manga') }}" class="text-sm font-bold uppercase tracking-wider hover:text-neon-blue transition {{ request()->is('products/category/manga') ? 'text-neon-blue' : 'text-gray-300' }}">
                         Manga
                     </a>
-                    <a href="{{ route('products.category', 'productos-anime') }}" class="text-sm font-bold uppercase tracking-wider hover:text-neon-blue transition {{ request()->is('products/category/productos-anime') ? 'text-neon-blue' : 'text-gray-300' }}">
-                        Productos Anime
+                    <a href="{{ route('products.category', 'merchandising') }}" class="text-sm font-bold uppercase tracking-wider hover:text-neon-blue transition {{ request()->is('products/category/merchandising') ? 'text-neon-blue' : 'text-gray-300' }}">
+                        Merchandising
                     </a>
 
                     <!-- Ofertas -->
@@ -149,8 +149,8 @@
             <a href="{{ route('products.category', 'manga') }}" class="block py-2 text-sm font-bold uppercase tracking-wider text-gray-300 hover:text-neon-blue transition">
                 Manga
             </a>
-            <a href="{{ route('products.category', 'productos-anime') }}" class="block py-2 text-sm font-bold uppercase tracking-wider text-gray-300 hover:text-neon-blue transition">
-                Productos Anime
+            <a href="{{ route('products.category', 'merchandising') }}" class="block py-2 text-sm font-bold uppercase tracking-wider text-gray-300 hover:text-neon-blue transition">
+                Merchandising
             </a>
             <a href="{{ route('offers') ?? '#' }}" class="block py-2 text-sm font-bold uppercase tracking-wider text-gray-300 hover:text-neon-blue transition">
                 Ofertas
@@ -189,7 +189,7 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
                     <h3 class="text-neon-blue font-bold mb-4">GameAnimeStore</h3>
-                    <p class="text-gray-400 text-sm">Tu tienda de confianza para videojuegos, consolas, manga y productos anime.</p>
+                    <p class="text-gray-400 text-sm">Tu tienda de confianza para videojuegos, consolas, manga y merchandising.</p>
                 </div>
                 <div>
                     <h4 class="text-white font-bold mb-4">Categorías</h4>
@@ -197,7 +197,7 @@
                         <li><a href="{{ route('products.category', 'consolas') }}" class="hover:text-neon-blue transition">Consolas</a></li>
                         <li><a href="{{ route('products.category', 'videojuegos') }}" class="hover:text-neon-blue transition">Videojuegos</a></li>
                         <li><a href="{{ route('products.category', 'manga') }}" class="hover:text-neon-blue transition">Manga</a></li>
-                        <li><a href="{{ route('products.category', 'productos-anime') }}" class="hover:text-neon-blue transition">Productos Anime</a></li>
+                        <li><a href="{{ route('products.category', 'merchandising') }}" class="hover:text-neon-blue transition">Merchandising</a></li>
                     </ul>
                 </div>
                 <div>

@@ -9,11 +9,30 @@ class Order extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'address_id', 'total', 'status'];
+    protected $fillable = [
+        'user_id', 
+        'address_id', 
+        'status', 
+        'subtotal', 
+        'discount_amount', 
+        'tax_amount', 
+        'tax_type', 
+        'total', 
+        'points_used',
+        'coupon_id'
+    ];
 
     protected $casts = [
-        'total' => 'decimal:2'
+        'total' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
+        'points_used' => 'integer',
+        'coupon_id' => 'integer'
     ];
+
+    public function coupon()
+    {
+        return $this->belongsTo(Coupon::class);
+    }
 
     public function user()
     {
@@ -50,6 +69,7 @@ class Order extends Model
 
         foreach ($activeRaffles as $raffle) {
             $ticketPrice = $raffle->getTicketPrice();
+            if ($ticketPrice <= 0) continue; // Evitar división por cero
             $quantity = floor($this->total / $ticketPrice);
             
             if ($quantity > 0) {

@@ -85,17 +85,62 @@ return [
 
         'pgsql' => [
             'driver' => 'pgsql',
-            'url' => env('DATABASE_URL', env('DB_URL')),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '5432'),
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
+            // IGNORAR COMPLETAMENTE 'url' = env('DATABASE_URL')
+            // ya que Render inyecta ahí el host EXTERNO, lo cual causa micro-cortes cada 50 segundos.
+            'host' => (function() {
+                // Sacamos el host del URL si existe, o del DB_HOST
+                $h = env('DB_HOST', '127.0.0.1');
+                if (env('DATABASE_URL')) {
+                    $urlParts = parse_url(env('DATABASE_URL'));
+                    if (isset($urlParts['host'])) $h = $urlParts['host'];
+                }
+                // EL TRUCO MAGISTRAL:
+                // Si el host tiene ".render.com" (que es la ruta pública e inestable de Render), 
+                // le cortamos toda esa parte para forzar a usar el nombre interno "dpg-xxxx-a".
+                // Esto pasa por la red privada VPC de Render y NUNCA sufre cortes DNS.
+                $h = preg_replace('/\.frankfurt-postgres\.render\.com$/', '', $h);
+                $h = preg_replace('/\.oregon-postgres\.render\.com$/', '', $h);
+                $h = preg_replace('/\.render\.com$/', '', $h);
+                
+                return $h;
+            })(),
+            'port' => (function() {
+                if (env('DATABASE_URL')) {
+                    $urlParts = parse_url(env('DATABASE_URL'));
+                    return $urlParts['port'] ?? env('DB_PORT', '5432');
+                }
+                return env('DB_PORT', '5432');
+            })(),
+            'database' => (function() {
+                if (env('DATABASE_URL')) {
+                    $urlParts = parse_url(env('DATABASE_URL'));
+                    return ltrim($urlParts['path'] ?? '', '/') ?: env('DB_DATABASE', 'laravel');
+                }
+                return env('DB_DATABASE', 'laravel');
+            })(),
+            'username' => (function() {
+                if (env('DATABASE_URL')) {
+                    $urlParts = parse_url(env('DATABASE_URL'));
+                    return $urlParts['user'] ?? env('DB_USERNAME', 'root');
+                }
+                return env('DB_USERNAME', 'root');
+            })(),
+            'password' => (function() {
+                if (env('DATABASE_URL')) {
+                    $urlParts = parse_url(env('DATABASE_URL'));
+                    return $urlParts['pass'] ?? env('DB_PASSWORD', '');
+                }
+                return env('DB_PASSWORD', '');
+            })(),
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            'sslmode' => env('DB_SSLMODE', 'prefer'),
+            'sslmode' => 'prefer',
+            // Mantener conexiones persistentes para workers
+            'options'   => [
+                \PDO::ATTR_PERSISTENT => true,
+            ],
         ],
 
         'sqlsrv' => [

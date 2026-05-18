@@ -66,7 +66,7 @@ class AuctionController extends Controller
         if ($check) return $check;
 
         $request->validate([
-            'amount' => 'required|numeric|min:0.01'
+            'amount' => 'required|integer|min:1'
         ]);
 
         $product = Product::findOrFail($id);
@@ -85,16 +85,38 @@ class AuctionController extends Controller
         // La puja del usuario también es sin IVA
         $bidAmount = $request->amount;
         
-        if ($bidAmount <= $currentBid) {
-            $minBid = number_format($currentBid + 0.01, 2);
-            return response()->json(['error' => "La puja debe ser mayor a {$minBid}€"], 400);
+        $minIncrement = ceil($currentBid * 0.10); // 10% de incremento mínimo
+        if ($minIncrement < 1) $minIncrement = 1; // Incremento mínimo de 1€ si el precio es muy bajo
+        $minBidAllowed = ceil($currentBid + $minIncrement);
+        $maxBidAllowed = ceil($currentBid * 5.0); // 500% del precio actual
+
+        if ($bidAmount < $minBidAllowed) {
+            return response()->json(['error' => "La puja debe ser de al menos " . number_format($minBidAllowed, 0) . "€ (incremento mínimo del 10%)"], 400);
+        }
+
+        if ($bidAmount > $maxBidAllowed) {
+            return response()->json(['error' => "La puja no puede superar el 500% del precio actual (máximo " . number_format($maxBidAllowed, 0) . "€)"], 400);
+        }
+
+        if ($product->user_id && Auth::id() == $product->user_id) {
+            return response()->json(['error' => 'No puedes pujar en tu propia subasta'], 400);
         }
         
+        $oldWinnerId = $product->auction_winner_id;
+
         // Actualizar el precio en BD (sin IVA)
         $product->price = $bidAmount;
         $product->auction_winner_id = Auth::id();
         $product->save();
         
+        // Notificar al usuario superado (si existe y es distinto al actual)
+        if ($oldWinnerId && $oldWinnerId != Auth::id()) {
+            event(new \App\Events\AuctionOutbid($product, $oldWinnerId));
+        }
+
+        // Difundir la puja en tiempo real (Pública)
+        broadcast(new \App\Events\AuctionBidPlaced($product->load('auctionWinner')));
+
         return response()->json([
             'success' => true, 
             'message' => '¡Puja realizada correctamente! Ahora eres el mejor postor',
@@ -113,14 +135,17 @@ class AuctionController extends Controller
             return response()->json(['error' => 'Este producto no puede iniciar subasta'], 400);
         }
         
-        $product->startAuction();
+        if (!$product->startAuction()) {
+            return response()->json(['error' => 'No se pudo iniciar la subasta'], 400);
+        }
         
         return response()->json([
             'success' => true, 
-            'message' => '¡Subasta iniciada! 24 horas para pujar',
+            'message' => '¡Subasta iniciada! 24 horas para pujar con 20% dto.',
             'product' => $product
         ]);
     }
+
 
     public function cancel(Request $request, $id)
     {
@@ -158,6 +183,48 @@ class AuctionController extends Controller
         ]);
     }
 
+    /**
+     * Crear subasta por parte de un usuario
+     */
+    public function storeUserAuction(Request $request)
+    {
+        $check = $this->checkBanned();
+        if ($check) return $check;
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'required|string',
+            'price' => 'required|numeric|min:0.01',
+            'category_id' => 'required|exists:categories,id',
+            'duration' => 'required|integer|min:1|max:1000',
+            'image_url' => 'required|url'
+        ]);
+
+
+        $product = Product::create([
+            'name' => $request->name,
+            'slug' => \Illuminate\Support\Str::slug($request->name) . '-' . uniqid(),
+            'description' => $request->description,
+            'price' => $request->price,
+            'original_price' => $request->price,
+            'stock' => 1,
+            'category_id' => $request->category_id,
+            'image' => $request->image_url,
+            'user_id' => Auth::id(),
+            'is_in_auction' => true,
+            'is_exclusive' => true,
+            'auction_end_time' => Carbon::now()->addHours((int) $request->duration)
+        ]);
+
+
+
+        return response()->json([
+            'success' => true,
+            'message' => '¡Subasta creada correctamente!',
+            'product' => $product
+        ], 201);
+    }
+
     // ============================================
     // MÉTODOS PARA ADMINISTRADORES (no requieren verificación de baneo)
     // ============================================
@@ -169,7 +236,7 @@ class AuctionController extends Controller
         }
         
         $request->validate([
-            'hours' => 'required|integer|min:1|max:72'
+            'hours' => 'required|integer|min:1|max:1000'
         ]);
         
         $product = Product::findOrFail($id);
@@ -180,6 +247,11 @@ class AuctionController extends Controller
         
         $hours = (int) $request->hours;
         $newEndTime = Carbon::parse($product->auction_end_time)->addHours($hours);
+        
+        if (Carbon::now()->diffInHours($newEndTime) > 1000) {
+            return response()->json(['error' => 'El tiempo restante de la subasta no puede superar las 1000 horas.'], 400);
+        }
+
         $product->auction_end_time = $newEndTime;
         $product->save();
         
@@ -193,7 +265,7 @@ class AuctionController extends Controller
         }
         
         $request->validate([
-            'hours' => 'required|integer|min:1|max:24'
+            'hours' => 'required|integer|min:1|max:1000'
         ]);
         
         $product = Product::findOrFail($id);

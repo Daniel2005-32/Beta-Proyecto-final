@@ -12,17 +12,39 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
+        // Verificar IP Baneada
+        $isIpBanned = \App\Models\Ban::where('ip_address', $request->ip())
+            ->where(function($q) {
+                $q->where('is_permanent', true)
+                  ->orWhere('banned_until', '>', now());
+            })->exists();
+
+        if ($isIpBanned) {
+            return response()->json(['error' => 'Tu dirección IP está bloqueada.'], 403);
+        }
+
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|regex:/^[a-zA-Z0-9\s.@]+$/',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
+        ], [
+            'name.required' => 'El nombre es obligatorio.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'Debes introducir un correo válido.',
+            'email.unique' => 'Este correo ya está registrado.',
+            'password.required' => 'La contraseña es obligatoria.',
+            'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
+            'password.confirmed' => 'La confirmación de la contraseña no coincide.',
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'last_ip_address' => $request->ip(),
         ]);
+
+        event(new \App\Events\UserRegistered($user));
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -47,6 +69,9 @@ class AuthController extends Controller
         }
 
         $user = User::where('email', $request->email)->firstOrFail();
+        
+        // Actualizar IP
+        $user->update(['last_ip_address' => $request->ip()]);
         
         // Revoke all tokens...
         $user->tokens()->delete();

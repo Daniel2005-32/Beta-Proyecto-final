@@ -33,7 +33,7 @@ services:
   backend:
     build:
       context: ./laravel_shop
-      dockerfile: Dockerfile.local
+      dockerfile: Dockerfile
     container_name: proyecto_backend
     restart: unless-stopped
     depends_on:

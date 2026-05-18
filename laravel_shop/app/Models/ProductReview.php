@@ -16,8 +16,19 @@ class ProductReview extends Model
         'user_id',
         'rating',
         'comment',
+        'image',
         'is_approved'
     ];
+
+    protected $appends = ['photo_url'];
+
+    public function getPhotoUrlAttribute()
+    {
+        if ($this->image) {
+            return asset('storage/' . $this->image);
+        }
+        return null;
+    }
 
     protected $casts = [
         'rating' => 'integer',

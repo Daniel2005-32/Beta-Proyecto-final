@@ -15,8 +15,10 @@ class ProfileController extends Controller
     public function index()
     {
         $user = Auth::user();
+        $user->load('wonAuctions', 'wonRaffles');
         return response()->json(['user' => $user]);
     }
+
 
     /**
      * Actualizar perfil
@@ -28,11 +30,13 @@ class ProfileController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
+            'show_censored_content' => 'nullable|boolean',
         ]);
 
         $user->update([
             'name' => $request->name,
             'email' => $request->email,
+            'show_censored_content' => $request->has('show_censored_content') ? $request->boolean('show_censored_content') : $user->show_censored_content,
         ]);
 
         return response()->json([

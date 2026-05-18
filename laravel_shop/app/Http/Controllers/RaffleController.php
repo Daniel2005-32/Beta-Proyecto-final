@@ -14,8 +14,17 @@ class RaffleController extends Controller
      */
     public function index()
     {
+        // Auto-finalizar sorteos caducados
+        $endedRaffles = Raffle::where('status', 'pending')
+                            ->where('draw_date', '<=', now())
+                            ->get();
+        foreach ($endedRaffles as $r) {
+            $r->drawWinner();
+        }
+
         // Traer sorteos cuyo estado no sea completado
         $raffles = Raffle::where('status', 'pending')
+
             ->orderBy('draw_date', 'asc')
             ->get()
             ->map(function ($raffle) {
@@ -39,7 +48,14 @@ class RaffleController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Sorteo no encontrado'], 404);
         }
 
+        // Auto-finalizar si caducó
+        if ($raffle->status === 'pending' && $raffle->draw_date <= now()) {
+            $raffle->drawWinner();
+            $raffle->refresh();
+        }
+
         $formatted = $this->formatRaffle($raffle, true);
+
 
         return response()->json([
             'status' => 'success',
@@ -114,6 +130,9 @@ class RaffleController extends Controller
             'status' => $raffle->status,
             'ticket_price' => $raffle->getTicketPrice(),
             'max_entries' => $raffle->getMaxEntries(),
+            'start_date' => $raffle->getStartDate() ? $raffle->getStartDate()->toDateTimeString() : null,
+            'image_url' => $raffle->getExtraData()['image_url'] ?? ($product ? $product->image_url : null),
+            'is_censored' => $product ? $product->is_censored : false,
             'total_entries' => $raffle->entries()->sum('quantity'),
             'time_left' => $raffle->timeLeft(),
             'is_active' => $raffle->isActive(),
@@ -121,7 +140,8 @@ class RaffleController extends Controller
                 'id' => $product->id,
                 'name' => $product->name,
                 'image_url' => $product->image_url,
-                'price' => $product->price
+                'price' => $product->price,
+                'is_censored' => $product->is_censored
             ] : null
         ];
 
@@ -129,10 +149,12 @@ class RaffleController extends Controller
             $data['winner'] = $raffle->winner()->select('id', 'name')->first();
         }
 
-        if ($includeUserStats && Auth::check()) {
-            $userId = Auth::id();
-            $data['user_entries'] = $raffle->getUserEntries($userId);
-            $data['user_chance'] = $raffle->getUserChance($userId);
+        if ($includeUserStats) {
+            $user = auth('sanctum')->user();
+            if ($user) {
+                $data['user_entries'] = $raffle->getUserEntries($user->id);
+                $data['user_chance'] = $raffle->getUserChance($user->id);
+            }
         }
 
         return $data;

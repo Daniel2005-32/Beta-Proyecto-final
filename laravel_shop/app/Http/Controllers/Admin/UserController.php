@@ -17,7 +17,41 @@ class UserController extends Controller
             abort(403, 'Acceso no autorizado');
         }
 
-        $users = User::orderBy('created_at', 'desc')->paginate(20);
+        $query = User::query();
+
+        if (request()->has('search') && !empty(request('search'))) {
+            $search = request('search');
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'LIKE', "%$search%")
+                  ->orWhere('email', 'LIKE', "%$search%");
+            });
+        }
+
+        if (request()->has('sort')) {
+            $sort = request('sort');
+            if ($sort === 'oldest') {
+                $query->orderBy('created_at', 'asc');
+            } elseif ($sort === 'role') {
+                $query->orderBy('is_super_admin', 'desc')->orderBy('is_admin', 'desc')->orderBy('created_at', 'desc');
+            } else {
+                $query->orderBy('created_at', 'desc');
+            }
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $users = $query->paginate(15);
+        
+        if (request()->wantsJson()) {
+            return response()->json([
+                'status' => 'success',
+                'users' => $users->items(),
+                'total' => $users->total(),
+                'current_page' => $users->currentPage(),
+                'last_page' => $users->lastPage()
+            ]);
+        }
+
         return view('admin.users.index', compact('users'));
     }
 
@@ -37,7 +71,7 @@ class UserController extends Controller
         }
 
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|regex:/^[a-zA-Z0-9\s.@]+$/',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'is_admin' => 'sometimes|boolean',
@@ -50,8 +84,13 @@ class UserController extends Controller
             'is_admin' => $request->has('is_admin') ? true : false,
         ]);
 
+        if ($request->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Usuario creado correctamente', 'user' => $user]);
+        }
+
         return redirect()->route('admin.users.index')
             ->with('success', 'Usuario creado correctamente');
+
     }
 
     public function edit(User $user)
@@ -62,6 +101,9 @@ class UserController extends Controller
 
         // Verificar si se puede editar este usuario
         if (!$user->canBeModifiedBy(auth()->user())) {
+            if (request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'No tienes permiso para editar este usuario'], 403);
+            }
             return redirect()->route('admin.users.index')
                 ->with('error', 'No tienes permiso para editar este usuario');
         }
@@ -77,6 +119,9 @@ class UserController extends Controller
 
         // Verificar si se puede modificar este usuario
         if (!$user->canBeModifiedBy(auth()->user())) {
+            if (request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'No tienes permiso para modificar este usuario'], 403);
+            }
             return redirect()->route('admin.users.index')
                 ->with('error', 'No tienes permiso para modificar este usuario');
         }
@@ -84,6 +129,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:8|confirmed',
         ]);
 
         $data = [
@@ -91,12 +137,22 @@ class UserController extends Controller
             'email' => $request->email,
         ];
 
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
         // Solo super admin puede cambiar roles
         if (auth()->user()->isSuperAdmin()) {
-            $data['is_admin'] = $request->has('is_admin') ? true : false;
+            if ($request->has('is_admin')) {
+                $data['is_admin'] = (bool) $request->is_admin;
+            }
         }
 
         $user->update($data);
+
+        if (request()->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Usuario actualizado correctamente', 'user' => $user->fresh()]);
+        }
 
         return redirect()->route('admin.users.index')
             ->with('success', 'Usuario actualizado correctamente');
@@ -110,17 +166,27 @@ class UserController extends Controller
 
         // Verificar si se puede eliminar este usuario
         if (!$user->canBeDeletedBy(auth()->user())) {
+            if (request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'No tienes permiso para eliminar este usuario'], 403);
+            }
             return redirect()->route('admin.users.index')
                 ->with('error', 'No tienes permiso para eliminar este usuario');
         }
 
         // No permitir eliminarse a sí mismo
         if ($user->id === auth()->id()) {
+            if (request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'No puedes eliminarte a ti mismo'], 400);
+            }
             return redirect()->route('admin.users.index')
                 ->with('error', 'No puedes eliminarte a ti mismo');
         }
 
         $user->delete();
+
+        if (request()->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => 'Usuario eliminado correctamente']);
+        }
 
         return redirect()->route('admin.users.index')
             ->with('success', 'Usuario eliminado correctamente');
@@ -134,12 +200,18 @@ class UserController extends Controller
 
         // Solo super admin puede cambiar roles
         if (!auth()->user()->isSuperAdmin()) {
+            if (request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'Solo el Super Admin puede cambiar roles de administrador'], 403);
+            }
             return redirect()->route('admin.users.index')
                 ->with('error', 'Solo el Super Admin puede cambiar roles de administrador');
         }
 
         // No permitir cambiar el rol del super admin
         if ($user->isSuperAdmin()) {
+            if (request()->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => 'No puedes modificar al Super Admin'], 400);
+            }
             return redirect()->route('admin.users.index')
                 ->with('error', 'No puedes modificar al Super Admin');
         }
@@ -148,6 +220,10 @@ class UserController extends Controller
         $user->save();
 
         $status = $user->is_admin ? 'convertido en administrador' : 'quitado como administrador';
+        
+        if (request()->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => "Usuario {$status} correctamente"]);
+        }
         
         return redirect()->route('admin.users.index')
             ->with('success', "Usuario {$status} correctamente");
@@ -162,26 +238,26 @@ class UserController extends Controller
             abort(403, 'Acceso no autorizado');
         }
 
-        // Verificaciones de seguridad
         if ($user->isSuperAdmin()) {
-            return redirect()->route('admin.users.index')
-                ->with('error', 'No puedes banear al Super Admin');
+            if (request()->wantsJson()) return response()->json(['status' => 'error', 'message' => 'No puedes banear al Super Admin'], 400);
+            return redirect()->route('admin.users.index')->with('error', 'No puedes banear al Super Admin');
         }
 
         if ($user->is_admin && !auth()->user()->isSuperAdmin()) {
-            return redirect()->route('admin.users.index')
-                ->with('error', 'No tienes permiso para banear a otros administradores');
+            if (request()->wantsJson()) return response()->json(['status' => 'error', 'message' => 'No tienes permiso para banear a otros administradores'], 403);
+            return redirect()->route('admin.users.index')->with('error', 'No tienes permiso para banear a otros administradores');
         }
 
         if ($user->id === auth()->id()) {
-            return redirect()->route('admin.users.index')
-                ->with('error', 'No puedes banearte a ti mismo');
+            if (request()->wantsJson()) return response()->json(['status' => 'error', 'message' => 'No puedes banearte a ti mismo'], 400);
+            return redirect()->route('admin.users.index')->with('error', 'No puedes banearte a ti mismo');
         }
 
         // Validar los datos del formulario (acepta valores numéricos para horas personalizadas)
         $request->validate([
             'reason' => 'required|string|max:255',
             'duration' => 'required', // Puede ser string (permanent, 1, 6, etc) o número
+            'type' => 'sometimes|in:account,chat',
         ]);
 
         // Crear el baneo
@@ -189,6 +265,7 @@ class UserController extends Controller
             'user_id' => $user->id,
             'banned_by' => auth()->id(),
             'reason' => $request->reason,
+            'type' => $request->type ?? 'account',
         ];
 
         if ($request->duration === 'permanent') {
@@ -201,6 +278,10 @@ class UserController extends Controller
         }
 
         Ban::create($data);
+
+        if (request()->wantsJson()) {
+            return response()->json(['status' => 'success', 'message' => "Usuario {$user->name} baneado correctamente"]);
+        }
 
         return redirect()->route('admin.users.index')
             ->with('success', "Usuario {$user->name} baneado correctamente");
@@ -215,27 +296,56 @@ class UserController extends Controller
             abort(403, 'Acceso no autorizado');
         }
 
-        // Verificaciones de seguridad
         if ($user->isSuperAdmin()) {
-            return redirect()->route('admin.users.index')
-                ->with('error', 'El Super Admin no puede ser desbaneado');
+            if (request()->wantsJson()) return response()->json(['status' => 'error', 'message' => 'El Super Admin no puede ser desbaneado'], 400);
+            return redirect()->route('admin.users.index')->with('error', 'El Super Admin no puede ser desbaneado');
         }
 
         if ($user->is_admin && !auth()->user()->isSuperAdmin()) {
-            return redirect()->route('admin.users.index')
-                ->with('error', 'No tienes permiso para desbanear a otros administradores');
+            if (request()->wantsJson()) return response()->json(['status' => 'error', 'message' => 'No tienes permiso para desbanear a otros administradores'], 403);
+            return redirect()->route('admin.users.index')->with('error', 'No tienes permiso para desbanear a otros administradores');
         }
 
         // Buscar el baneo activo
         $ban = $user->activeBan();
         
         if ($ban) {
-            $ban->update(['banned_until' => Carbon::now()]);
-            return redirect()->route('admin.users.index')
-                ->with('success', "Usuario {$user->name} desbaneado correctamente");
+            $ban->update([
+                'banned_until' => Carbon::now(),
+                'is_permanent' => false
+            ]);
+            if (request()->wantsJson()) return response()->json(['status' => 'success', 'message' => "Usuario {$user->name} desbaneado correctamente"]);
+
+            return redirect()->route('admin.users.index')->with('success', "Usuario {$user->name} desbaneado correctamente");
         }
 
-        return redirect()->route('admin.users.index')
-            ->with('error', 'El usuario no está baneado');
+        if (request()->wantsJson()) return response()->json(['status' => 'error', 'message' => 'El usuario no está baneado'], 400);
+        return redirect()->route('admin.users.index')->with('error', 'El usuario no está baneado');
+    }
+    /**
+     * Actualizar puntos de un usuario (Solo Super Admin)
+     */
+    public function updatePoints(Request $request, \App\Models\User $user)
+    {
+        if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+            abort(403, 'Solo el Super Administrador puede gestionar puntos manualmente');
+        }
+
+        $request->validate([
+            'amount' => 'required|integer|min:-1000000|max:1000000',
+        ]);
+
+        $user->points += $request->amount;
+        if ($user->points < 0) $user->points = 0;
+        $user->save();
+
+        $action = $request->amount >= 0 ? 'añadidos' : 'restados';
+        $absAmount = abs($request->amount);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Se han {$action} {$absAmount} puntos a {$user->name}",
+            'new_points' => $user->points
+        ]);
     }
 }

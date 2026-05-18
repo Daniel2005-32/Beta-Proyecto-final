@@ -15,16 +15,27 @@ class Product extends Model
         'stock', 'category_id', 'image', 'featured', 'trending',
         'is_exclusive', 'is_in_auction', 'auction_end_time',
         'auction_winner_id', 'auction_claimed', 'auction_cancelled',
-        'auction_final_price'
+        'auction_final_price', 'user_id',
+        'is_anime', 'is_marvel', 'is_star_wars', 'is_dc',
+        'parent_id', 'is_censored'
     ];
 
-    protected $appends = ['image_url'];
+    protected static function booted()
+    {
+        static::addGlobalScope('parent_only', function ($builder) {
+            $builder->whereNull('parent_id');
+        });
+    }
+
+    protected $appends = ['image_url', 'average_rating', 'full_name'];
+
 
     public function getImageUrlAttribute()
     {
         if ($this->image) {
             if (filter_var($this->image, FILTER_VALIDATE_URL)) {
-                return $this->image;
+                // Si la URL es de localhost (proveniente del seeder local), la reemplazamos por la URL actual del backend
+                return str_replace('http://localhost:8000', config('app.url'), $this->image);
             }
             return asset('storage/' . $this->image);
         }
@@ -38,15 +49,26 @@ class Product extends Model
         'is_in_auction' => 'boolean',
         'auction_claimed' => 'boolean',
         'auction_cancelled' => 'boolean',
+        'is_anime' => 'boolean',
+        'is_marvel' => 'boolean',
+        'is_star_wars' => 'boolean',
+        'is_dc' => 'boolean',
+
         'auction_end_time' => 'datetime',
         'price' => 'decimal:2',
         'original_price' => 'decimal:2',
-        'auction_final_price' => 'decimal:2'
+        'auction_final_price' => 'decimal:2',
+        'parent_id' => 'integer'
     ];
 
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function auctionWinner()
@@ -75,12 +97,17 @@ class Product extends Model
      */
     public function getAverageRatingAttribute()
     {
-        $reviews = $this->approvedReviews;
-        if ($reviews->isEmpty()) {
-            return 0;
+        try {
+            $reviews = $this->approvedReviews;
+            if (!$reviews || $reviews->isEmpty()) {
+                return 0;
+            }
+            return round($reviews->avg('rating'), 1);
+        } catch (\Exception $e) {
+            return 0; // Evitar caídas (500) si la tabla no existe en producción aún
         }
-        return round($reviews->avg('rating'), 1);
     }
+
 
     /**
      * Verificar si un usuario ya valoró este producto
@@ -277,7 +304,35 @@ class Product extends Model
     public function scopeActiveAuctions($query)
     {
         return $query->where('is_in_auction', true)
-                     ->where('auction_cancelled', false)
                      ->where('auction_end_time', '>', Carbon::now());
+    }
+
+    /**
+     * Relación con productos hijos (variantes/tomos)
+     */
+    public function children()
+    {
+        return $this->hasMany(Product::class, 'parent_id')->withoutGlobalScope('parent_only');
+    }
+
+    /**
+     * Obtener el nombre completo (incluyendo el nombre de la serie si es un tomo)
+     */
+    public function getFullNameAttribute()
+    {
+        if ($this->parent_id && $this->parent) {
+            // Limpiar el nombre del padre (quitar Vol. 1, etc. para el prefijo)
+            $parentName = preg_replace('/\s*(?:[Vv]ol\.?|[Vv]olumen|[Tt]omo)\s*\d+.*$/i', '', $this->parent->name);
+            return trim($parentName) . ' - ' . $this->name;
+        }
+        return $this->name;
+    }
+
+    /**
+     * Relación con el producto padre (serie)
+     */
+    public function parent()
+    {
+        return $this->belongsTo(Product::class, 'parent_id')->withoutGlobalScope('parent_only');
     }
 }

@@ -1,22 +1,18 @@
-FROM php:8.4-fpm-alpine
+FROM php:8.4-fpm
 
 # Install system dependencies
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y \
     nginx \
     zip \
     unzip \
     git \
     supervisor \
     curl \
-    libpng-dev \
-    libxml2-dev \
-    libzip-dev \
-    oniguruma-dev \
-    linux-headers \
-    postgresql-dev
+    && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql pdo_pgsql opcache bcmath gd xml zip mbstring
+# Install PHP extensions fast using mlocati
+COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+RUN install-php-extensions pdo pdo_mysql pdo_pgsql opcache bcmath gd xml zip mbstring pcntl
 
 # Copy Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -36,9 +32,13 @@ COPY . .
 # Finish composer setup WITH autoloader optimization
 RUN composer install --no-dev --optimize-autoloader
 
-# Copy Configuration files
-COPY nginx.conf /etc/nginx/http.d/default.conf
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+# Setup Nginx configuration
+RUN rm -f /etc/nginx/sites-enabled/default
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Setup Supervisor and PHP configurations
+COPY supervisord.conf /etc/supervisor/supervisord.conf
+COPY opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
 # Fix permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
@@ -51,4 +51,4 @@ COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]
