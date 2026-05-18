@@ -279,6 +279,8 @@ const endGame = async (victory) => {
     isPlaying.value = false;
     
     const rewardPoints = victory ? (difficulty.value === 'hard' ? 10 : 5) : 0;
+    const token = localStorage.getItem('token');
+    const headers = { Authorization: `Bearer ${token}` };
     
     if (victory) {
         addLog("¡HAZAÑA DE LEYENDA! Has derrotado al Boss supremo.", 'victory');
@@ -288,13 +290,13 @@ const endGame = async (victory) => {
             await axios.post(`${apiBase}/loyalty/add-points`, {
                 points: pts,
                 game_id: 'soul_battle'
-            });
+            }, { headers });
 
             // Recompensa especial Modo Imposible
             if (difficulty.value === 'impossible') {
                 const cpnRes = await axios.post(`${apiBase}/loyalty/claim-battle-coupon`, {
                     difficulty: 'impossible'
-                });
+                }, { headers });
                 store.notify(cpnRes.data.message, "success");
             } else {
                 store.notify(`¡Has ganado ${rewardPoints} Soul Points!`, "success");
@@ -310,7 +312,7 @@ const endGame = async (victory) => {
             await axios.post(`${apiBase}/loyalty/add-points`, {
                 points: 0,
                 game_id: 'soul_battle'
-            });
+            }, { headers });
             emit('game-completed');
         } catch (err) {}
     }
