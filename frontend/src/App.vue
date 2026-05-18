@@ -295,7 +295,7 @@ const subscribeToNewsletter = async () => {
              </div>
           </div>
           <div v-else class="flex items-center gap-2 md:gap-4 ml-1 md:ml-2 pl-2 md:pl-4 border-l border-gray-200 dark:border-gray-800">
-            <router-link to="/register" class="bg-[#00D2FF] text-gamer-dark px-3 md:px-4 py-1.5 rounded-full hover:bg-white transition text-[10px] md:text-[11px] font-black uppercase tracking-wider shadow-lg shadow-neon-blue/20 btn-glow">
+            <router-link to="/login" class="bg-[#00D2FF] text-gamer-dark px-3 md:px-4 py-1.5 rounded-full hover:bg-white transition text-[10px] md:text-[11px] font-black uppercase tracking-wider shadow-lg shadow-neon-blue/20 btn-glow">
               <span class="hidden xs:inline">Acceder</span>
               <i class="fas fa-sign-in-alt xs:hidden px-1"></i>
             </router-link>
